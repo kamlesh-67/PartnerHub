@@ -5,7 +5,7 @@ const prisma = new PrismaClient()
 interface EmailData {
   to: string | string[]
   templateName: string
-  variables?: Record<string, any>
+  variables?: Record<string, unknown>
   from?: string
 }
 
@@ -60,7 +60,7 @@ export async function sendEmail(data: EmailData): Promise<EmailResult> {
   }
 }
 
-function processTemplate(template: string, variables: Record<string, any>): string {
+function processTemplate(template: string, variables: Record<string, unknown>): string {
   let processed = template
 
   // Replace variables in format {{variableName}}
@@ -133,7 +133,7 @@ export const EMAIL_TEMPLATES = {
 }
 
 // Quick send functions for common scenarios
-export async function sendOrderConfirmation(userEmail: string, orderData: any) {
+export async function sendOrderConfirmation(userEmail: string, orderData: Record<string, unknown>) {
   return sendEmail({
     to: userEmail,
     templateName: EMAIL_TEMPLATES.ORDER_CONFIRMATION,
@@ -148,7 +148,7 @@ export async function sendOrderConfirmation(userEmail: string, orderData: any) {
   })
 }
 
-export async function sendPaymentSuccess(userEmail: string, paymentData: any) {
+export async function sendPaymentSuccess(userEmail: string, paymentData: Record<string, unknown>) {
   return sendEmail({
     to: userEmail,
     templateName: EMAIL_TEMPLATES.PAYMENT_SUCCESS,
@@ -162,7 +162,7 @@ export async function sendPaymentSuccess(userEmail: string, paymentData: any) {
   })
 }
 
-export async function sendLowStockAlert(adminEmails: string[], productData: any) {
+export async function sendLowStockAlert(adminEmails: string[], productData: Record<string, unknown>) {
   return sendEmail({
     to: adminEmails,
     templateName: EMAIL_TEMPLATES.LOW_STOCK_ALERT,
@@ -176,7 +176,7 @@ export async function sendLowStockAlert(adminEmails: string[], productData: any)
   })
 }
 
-export async function sendUserWelcome(userEmail: string, userData: any) {
+export async function sendUserWelcome(userEmail: string, userData: Record<string, unknown>) {
   return sendEmail({
     to: userEmail,
     templateName: EMAIL_TEMPLATES.USER_WELCOME,

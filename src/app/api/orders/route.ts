@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     
     // Filter by user's orders unless admin
     if (!['SUPER_ADMIN', 'ACCOUNT_ADMIN'].includes(session.user.role)) {
@@ -450,7 +450,7 @@ export async function PUT(request: NextRequest) {
       })
     }
 
-    const updateData: any = { status }
+    const updateData: Record<string, unknown> = { status }
     if (notes) updateData.notes = notes
 
     const updatedOrder = await prisma.order.update({

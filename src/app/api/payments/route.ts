@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     
     // Filter by user's orders unless admin
     if (session.user.role !== 'SUPER_ADMIN') {
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Simulate payment processing (replace with actual Stripe/PayPal integration)
-async function processPayment(paymentData: any) {
+async function processPayment(paymentData: Record<string, unknown>) {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 1000))
 
@@ -261,7 +261,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Payment ID required' }, { status: 400 })
     }
 
-    const updateData: any = { status }
+    const updateData: Record<string, unknown> = { status }
     
     if (status === 'failed' && failureReason) {
       updateData.failureReason = failureReason

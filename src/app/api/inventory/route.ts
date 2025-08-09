@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Inventory transactions
-    const where: any = {}
+    const where: Record<string, unknown> = {}
 
     if (productId) {
       where.productId = productId
@@ -174,7 +174,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    const oldStock = product.stock
     let newStock = product.stock
 
     // Calculate new stock based on transaction type
@@ -202,7 +201,7 @@ export async function POST(request: NextRequest) {
         data: {
           productId,
           type,
-          quantity: type === 'adjustment' ? (newStock - oldStock) : 
+          quantity: type === 'adjustment' ? (newStock - product.stock) : 
                    type === 'out' ? -Math.abs(quantity) : Math.abs(quantity),
           reason,
           reference,
@@ -273,7 +272,7 @@ export async function POST(request: NextRequest) {
         productSku: result.transaction.product.sku,
         type,
         quantity,
-        oldStock,
+        oldStock: product.stock,
         newStock,
         reason,
         reference
@@ -288,7 +287,7 @@ export async function POST(request: NextRequest) {
       product: {
         id: result.product.id,
         stock: result.product.stock,
-        stockChange: newStock - oldStock
+        stockChange: newStock - product.stock
       },
       message: 'Inventory transaction created successfully'
     }, { status: 201 })

@@ -9,7 +9,7 @@ interface AuditLogData {
   userId: string
   userEmail: string
   userName: string
-  details?: any
+  details?: Record<string, unknown>
   severity?: 'info' | 'warning' | 'error' | 'critical'
   category?: 'authentication' | 'user_management' | 'system' | 'data' | 'security'
   ipAddress?: string

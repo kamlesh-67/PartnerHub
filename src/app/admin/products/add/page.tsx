@@ -115,7 +115,7 @@ export default function AddProductPage() {
     }
   }, [session])
 
-  const handleInputChange = (field: keyof ProductFormData, value: any) => {
+  const handleInputChange = (field: keyof ProductFormData, value: string | number | string[] | ProductFormData["dimensions"] | 'ACTIVE' | 'INACTIVE') => {
     setFormData(prev => ({
       ...prev,
       [field]: value

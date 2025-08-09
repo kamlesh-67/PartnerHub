@@ -31,7 +31,7 @@ interface Notification {
   type: 'info' | 'success' | 'warning' | 'error'
   isRead: boolean
   isGlobal: boolean
-  metadata?: any
+  metadata?: Record<string, unknown>
   createdAt: string
   readAt?: string
 }

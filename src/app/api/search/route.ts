@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Search query is required' }, { status: 400 })
     }
 
-    const results: any = {
+    const results: Record<string, unknown> = {
       query,
       total: 0,
       results: []
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     // Search Products
     if (type === 'all' || type === 'products') {
-      const productWhere: any = {
+      const productWhere: Record<string, unknown> = {
         OR: query ? [
           { name: { contains: query, mode: 'insensitive' } },
           { description: { contains: query, mode: 'insensitive' } },
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         productWhere.status = status
       }
 
-      const orderBy: any = {}
+      const orderBy: Record<string, string> = {}
       switch (sortBy) {
         case 'name':
           orderBy.name = sortOrder
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
 
     // Search Orders (admin only)
     if ((type === 'all' || type === 'orders') && ['SUPER_ADMIN', 'ACCOUNT_ADMIN', 'OPERATION'].includes(session.user.role)) {
-      const orderWhere: any = {}
+      const orderWhere: Record<string, unknown> = {}
 
       if (query) {
         orderWhere.OR = [
@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
 
     // Search Users (admin only)
     if ((type === 'all' || type === 'users') && ['SUPER_ADMIN', 'ACCOUNT_ADMIN'].includes(session.user.role)) {
-      const userWhere: any = {}
+      const userWhere: Record<string, unknown> = {}
 
       if (query) {
         userWhere.OR = [
@@ -266,7 +266,7 @@ export async function GET(request: NextRequest) {
 
     // Search Companies (super admin only)
     if ((type === 'all' || type === 'companies') && session.user.role === 'SUPER_ADMIN') {
-      const companyWhere: any = {}
+      const companyWhere: Record<string, unknown> = {}
 
       if (query) {
         companyWhere.OR = [

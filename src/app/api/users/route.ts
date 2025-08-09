@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const company = searchParams.get('company') || 'all'
 
     // Build where clause based on user role and filters
-    let whereClause: any = {}
+    const whereClause: Record<string, unknown> = {}
 
     // If user is ACCOUNT_ADMIN, only show users from their company
     if (session.user.role === 'ACCOUNT_ADMIN') {

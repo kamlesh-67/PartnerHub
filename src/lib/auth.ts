@@ -103,7 +103,7 @@ export const authOptions: NextAuthOptions = {
 }
 
 // JWT utility functions
-export const generateJWT = (payload: any) => {
+export const generateJWT = (payload: Record<string, unknown>) => {
   return jwt.sign(payload, process.env.NEXTAUTH_SECRET!, {
     expiresIn: '30d'
   })

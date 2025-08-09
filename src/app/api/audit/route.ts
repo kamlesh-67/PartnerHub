@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     startDate.setDate(now.getDate() - daysBack)
 
     // Build where clause
-    const where: any = {
+    const where: Record<string, unknown> = {
       timestamp: { gte: startDate }
     }
 

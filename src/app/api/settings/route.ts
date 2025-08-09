@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const key = searchParams.get('key')
 
     // Build where clause
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     
     if (key) {
       where.key = key
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ settings: formattedSettings })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching settings:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   } finally {
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       message: 'Setting created successfully'
     }, { status: 201 })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: 'Setting key already exists' }, { status: 400 })
     }
@@ -177,7 +177,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     if (value !== undefined) updateData.value = String(validatedValue)
     if (type) updateData.type = type
     if (category) updateData.category = category
@@ -220,7 +220,7 @@ export async function PUT(request: NextRequest) {
       message: 'Setting updated successfully'
     })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error updating setting:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   } finally {
@@ -282,7 +282,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ message: 'Setting deleted successfully' })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error deleting setting:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   } finally {
@@ -291,7 +291,7 @@ export async function DELETE(request: NextRequest) {
 }
 
 // Helper functions
-function validateSettingValue(value: any, type: string) {
+function validateSettingValue(value: unknown, type: string) {
   switch (type) {
     case 'string':
       return String(value)

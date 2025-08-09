@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const startDate = dateFrom ? new Date(dateFrom) : defaultDateFrom
     const endDate = dateTo ? new Date(dateTo) : defaultDateTo
 
-    let reportData: any = {}
+    let reportData: Record<string, unknown> = {}
 
     switch (reportType) {
       case 'sales':
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (format === 'csv') {
-      const csv = convertToCSV(reportData.data, reportData.headers)
+      const csv = convertToCSV(reportData.data as any[], reportData.headers as string[])
       return new NextResponse(csv, {
         status: 200,
         headers: {
@@ -97,8 +97,8 @@ export async function GET(request: NextRequest) {
 }
 
 // Sales Report
-async function generateSalesReport(startDate: Date, endDate: Date, session: any, companyId?: string | null) {
-  const where: any = {
+async function generateSalesReport(startDate: Date, endDate: Date, session: Record<string, any>, companyId?: string | null) {
+  const where: Record<string, unknown> = {
     createdAt: { gte: startDate, lte: endDate },
     status: { not: 'CANCELLED' }
   }
@@ -211,7 +211,7 @@ async function generateSalesReport(startDate: Date, endDate: Date, session: any,
 }
 
 // Inventory Report
-async function generateInventoryReport(session: any) {
+async function generateInventoryReport(session: Record<string, any>) {
   const products = await prisma.product.findMany({
     include: {
       category: { select: { name: true } },
@@ -268,8 +268,8 @@ async function generateInventoryReport(session: any) {
 }
 
 // Customer Report
-async function generateCustomerReport(startDate: Date, endDate: Date, session: any, companyId?: string | null) {
-  const where: any = {}
+async function generateCustomerReport(startDate: Date, endDate: Date, session: Record<string, any>, companyId?: string | null) {
+  const where: Record<string, unknown> = {}
   
   if (companyId) {
     where.companyId = companyId
@@ -339,7 +339,7 @@ async function generateCustomerReport(startDate: Date, endDate: Date, session: a
 }
 
 // Product Performance Report
-async function generateProductReport(startDate: Date, endDate: Date, session: any) {
+async function generateProductReport(startDate: Date, endDate: Date, session: Record<string, any>) {
   const products = await prisma.product.findMany({
     include: {
       category: { select: { name: true } },
@@ -398,8 +398,8 @@ async function generateProductReport(startDate: Date, endDate: Date, session: an
 }
 
 // Order Report
-async function generateOrderReport(startDate: Date, endDate: Date, session: any, companyId?: string | null) {
-  const where: any = {
+async function generateOrderReport(startDate: Date, endDate: Date, session: Record<string, any>, companyId?: string | null) {
+  const where: Record<string, unknown> = {
     createdAt: { gte: startDate, lte: endDate }
   }
 
@@ -460,7 +460,7 @@ async function generateOrderReport(startDate: Date, endDate: Date, session: any,
 }
 
 // Audit Report (Super Admin only)
-async function generateAuditReport(startDate: Date, endDate: Date, session: any) {
+async function generateAuditReport(startDate: Date, endDate: Date, session: Record<string, any>) {
   if (session.user.role !== 'SUPER_ADMIN') {
     return { error: 'Unauthorized to access audit logs' }
   }
@@ -515,7 +515,7 @@ async function generateAuditReport(startDate: Date, endDate: Date, session: any)
 }
 
 // Helper function to convert data to CSV
-function convertToCSV(data: any[], headers: string[]): string {
+function convertToCSV(data: unknown[], headers: string[]): string {
   const csvRows = []
   
   // Add headers
@@ -523,7 +523,7 @@ function convertToCSV(data: any[], headers: string[]): string {
   
   // Add data rows
   for (const row of data) {
-    const values = row.map((field: any) => {
+    const values = (row as any[]).map((field: any) => {
       let escaped = ('' + field).replace(/"/g, '\\"')
       if (escaped.search(/("|,|\n)/g) >= 0) {
         escaped = `"${escaped}"`

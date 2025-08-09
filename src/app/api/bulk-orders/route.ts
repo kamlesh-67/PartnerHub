@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       type: 'bulk_order'
     }
 
@@ -284,7 +284,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Bulk order not found' }, { status: 404 })
     }
 
-    const metadata = currentBulkOrder.metadata as any
+    const metadata = currentBulkOrder.metadata as Record<string, unknown>
     const updatedMetadata = {
       ...metadata,
       status,

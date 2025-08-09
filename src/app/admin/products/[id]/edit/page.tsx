@@ -164,7 +164,7 @@ export default function EditProductPage() {
     }
   }, [session, productId, router])
 
-  const handleInputChange = (field: keyof ProductFormData, value: any) => {
+  const handleInputChange = (field: keyof ProductFormData, value: string | number | string[] | ProductFormData["dimensions"] | 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK') => {
     setFormData(prev => ({
       ...prev,
       [field]: value

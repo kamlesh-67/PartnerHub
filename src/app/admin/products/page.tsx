@@ -43,7 +43,7 @@ interface Product {
   minStock: number
   status: 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK'
   weight?: number
-  dimensions?: any
+  dimensions?: { length: number; width: number; height: number }
   images?: string[]
   tags?: string[]
   category: {

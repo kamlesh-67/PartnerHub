@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20')
     const skip = (page - 1) * limit
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       OR: [
         { userId: session.user.id },
         { isGlobal: true }
@@ -200,7 +200,7 @@ export async function DELETE(request: NextRequest) {
 
     // Users can only delete their own notifications or global ones
     // Admins can delete any notification
-    const where: any = { id: notificationId }
+    const where: Record<string, unknown> = { id: notificationId }
     
     if (session.user.role !== 'SUPER_ADMIN') {
       where.OR = [
