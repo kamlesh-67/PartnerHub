@@ -42,6 +42,7 @@ model User {
   name          String?
   password      String
   role          UserRole  @default(BUYER)
+  phone         String?   // Added phone field for user profiles
   companyId     String?
   company       Company?  @relation(fields: [companyId], references: [id])
   createdAt     DateTime  @default(now())
@@ -53,6 +54,10 @@ model User {
   orders        Order[]
   cartItems     CartItem[]
   addresses     Address[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+  inventoryTransactions InventoryTransaction[]
+  fileUploads   FileUpload[]
   
   // NextAuth fields
   accounts      Account[]
@@ -194,6 +199,7 @@ model Product {
   // Relations
   cartItems   CartItem[]
   orderItems  OrderItem[]
+  inventoryTransactions InventoryTransaction[]
   
   @@map("products")
 }
@@ -239,6 +245,7 @@ model Order {
   shippingAddress Address     @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
   billingAddress  Address     @relation("BillingAddress", fields: [billingAddressId], references: [id])
   orderItems      OrderItem[]
+  paymentRecords  PaymentRecord[]
   
   @@map("orders")
 }
@@ -256,4 +263,163 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
   
   @@map("order_items")
+}
+
+// Audit Log model for tracking system activities
+model AuditLog {
+  id            String   @id @default(cuid())
+  timestamp     DateTime @default(now())
+  action        String
+  resource      String
+  resourceId    String
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userEmail     String
+  userName      String
+  ipAddress     String?
+  userAgent     String?
+  details       Json?    // Stores oldValues, newValues, metadata as JSON
+  severity      String   @default("info") // info, warning, error, critical
+  category      String   @default("system") // authentication, user_management, system, data, security
+  createdAt     DateTime @default(now())
+  
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([category])
+  @@index([severity])
+  @@index([timestamp])
+}
+
+// Analytics data aggregation table
+model AnalyticsMetric {
+  id          String   @id @default(cuid())
+  metricName  String   // revenue, orders, users, products
+  metricValue Float
+  period      String   // daily, weekly, monthly
+  date        DateTime
+  metadata    Json?    // Additional metric data
+  createdAt   DateTime @default(now())
+  
+  @@map("analytics_metrics")
+  @@unique([metricName, period, date])
+  @@index([metricName])
+  @@index([period])
+  @@index([date])
+}
+
+// Notification system
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isRead    Boolean  @default(false)
+  isGlobal  Boolean  @default(false) // System-wide notifications
+  metadata  Json?    // Additional notification data
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+  expiresAt DateTime?
+  
+  @@map("notifications")
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+  @@index([isGlobal])
+  @@index([createdAt])
+}
+
+// System Settings
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   @default("string") // string, number, boolean, json
+  category  String   @default("general") // general, email, payment, security
+  isPublic  Boolean  @default(false) // Can be accessed by non-admin users
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_settings")
+  @@index([category])
+}
+
+// Email Templates for notifications
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  subject   String
+  body      String   // HTML template
+  variables Json?    // Template variables
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("email_templates")
+}
+
+// Payment Records
+model PaymentRecord {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount        Float
+  currency      String   @default("USD")
+  status        String   // pending, completed, failed, cancelled, refunded
+  paymentMethod String   // credit_card, bank_transfer, etc.
+  gatewayId     String?  // Payment gateway transaction ID
+  gatewayData   Json?    // Gateway specific data
+  failureReason String?
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("payment_records")
+  @@index([orderId])
+  @@index([status])
+  @@index([paymentMethod])
+}
+
+// Inventory tracking
+model InventoryTransaction {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type      String   // in, out, adjustment
+  quantity  Int
+  reason    String?  // purchase, sale, damage, adjustment
+  reference String?  // Order ID, adjustment ID, etc.
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  
+  @@map("inventory_transactions")
+  @@index([productId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// File uploads management
+model FileUpload {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  path        String
+  url         String
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  entityType  String?  // product, category, company, etc.
+  entityId    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  @@map("file_uploads")
+  @@index([userId])
+  @@index([entityType, entityId])
 }
