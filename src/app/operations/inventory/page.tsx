@@ -114,7 +114,7 @@ export default function OperationsInventoryPage() {
       return
     }
 
-    if (userRole !== 'OPERATION') {
+    if (userRole !== 'OPERATION' && userRole !== 'SUPER_ADMIN') {
       router.push('/unauthorized')
       return
     }
@@ -226,7 +226,7 @@ export default function OperationsInventoryPage() {
     )
   }
 
-  if (!session || userRole !== 'OPERATION') {
+  if (!session || (userRole !== 'OPERATION' && userRole !== 'SUPER_ADMIN')) {
     return null
   }
 

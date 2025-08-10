@@ -111,7 +111,7 @@ export default function OperationsOrdersPage() {
       return
     }
 
-    if (userRole !== 'OPERATION') {
+    if (userRole !== 'OPERATION' && userRole !== 'SUPER_ADMIN') {
       router.push('/unauthorized')
       return
     }

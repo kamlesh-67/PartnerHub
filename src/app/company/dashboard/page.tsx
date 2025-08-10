@@ -48,7 +48,7 @@ export default function CompanyDashboard() {
       return
     }
 
-    if (userRole !== 'ACCOUNT_ADMIN') {
+    if (userRole !== 'ACCOUNT_ADMIN' && userRole !== 'SUPER_ADMIN') {
       router.push('/unauthorized')
       return
     }
@@ -78,7 +78,7 @@ export default function CompanyDashboard() {
     )
   }
 
-  if (!session || userRole !== 'ACCOUNT_ADMIN') {
+  if (!session || (userRole !== 'ACCOUNT_ADMIN' && userRole !== 'SUPER_ADMIN')) {
     return null
   }
 

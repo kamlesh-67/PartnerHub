@@ -13,28 +13,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   FileText, 
   Download, 
-  Calendar as CalendarIcon,
-  TrendingUp,
-  DollarSign,
-  Users,
-  Package,
   BarChart3,
+  DollarSign,
+  TrendingUp,
+  Users,
+  ShoppingCart,
+  Package,
+  Calendar,
+  RefreshCcw,
+  Plus,
+  Eye,
   PieChart,
   LineChart,
-  Eye,
-  Filter,
-  RefreshCcw
+  Target,
+  Award
 } from 'lucide-react'
-// import { format } from 'date-fns'
 
-interface ReportData {
+interface CompanyReport {
   id: string
   name: string
-  type: 'SALES' | 'INVENTORY' | 'USERS' | 'ORDERS' | 'FINANCIAL' | 'ACTIVITY'
+  type: 'SPENDING' | 'ORDERS' | 'USERS' | 'PRODUCTS' | 'COMPLIANCE' | 'BUDGET'
   description: string
   lastGenerated: string
   fileSize: string
   status: 'READY' | 'GENERATING' | 'ERROR'
+  category: string
   downloadUrl?: string
 }
 
@@ -46,101 +49,114 @@ interface ReportMetric {
   icon: React.ElementType
 }
 
-export default function AdminReportsPage() {
+export default function CompanyReportsPage() {
   const { data: session } = useSession()
-  const [reports, setReports] = useState<ReportData[]>([])
+  const [reports, setReports] = useState<CompanyReport[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState<Date>()
-  const [reportType, setReportType] = useState<string>('ALL')
-  const [dateRange, setDateRange] = useState<string>('7_DAYS')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [typeFilter, setTypeFilter] = useState<string>('ALL')
+  const [dateRange, setDateRange] = useState<string>('30_DAYS')
 
-  // Mock reports data
-  const mockReports: ReportData[] = [
+  const mockReports: CompanyReport[] = [
     {
       id: '1',
-      name: 'Sales Performance Report',
-      type: 'SALES',
-      description: 'Comprehensive sales analysis with revenue, trends, and top products',
+      name: 'Monthly Spending Analysis',
+      type: 'SPENDING',
+      description: 'Detailed breakdown of company spending by category and department',
       lastGenerated: '2024-01-10T14:30:00Z',
-      fileSize: '2.1 MB',
+      fileSize: '2.4 MB',
       status: 'READY',
-      downloadUrl: '/api/reports/download/sales-performance.pdf'
+      category: 'Financial',
+      downloadUrl: '/api/reports/download/monthly-spending.pdf'
     },
     {
       id: '2',
-      name: 'Inventory Status Report',
-      type: 'INVENTORY',
-      description: 'Current stock levels, low inventory alerts, and reorder recommendations',
-      lastGenerated: '2024-01-10T10:15:00Z',
-      fileSize: '1.8 MB',
+      name: 'Order History Report',
+      type: 'ORDERS',
+      description: 'Complete order history with trends and patterns analysis',
+      lastGenerated: '2024-01-10T11:15:00Z',
+      fileSize: '1.9 MB',
       status: 'READY',
-      downloadUrl: '/api/reports/download/inventory-status.pdf'
+      category: 'Procurement',
+      downloadUrl: '/api/reports/download/order-history.pdf'
     },
     {
       id: '3',
-      name: 'User Activity Report',
+      name: 'User Activity Summary',
       type: 'USERS',
-      description: 'User engagement, login patterns, and activity analytics',
+      description: 'Team member usage patterns and activity analytics',
       lastGenerated: '2024-01-10T09:45:00Z',
-      fileSize: '950 KB',
+      fileSize: '850 KB',
       status: 'READY',
+      category: 'Usage',
       downloadUrl: '/api/reports/download/user-activity.pdf'
     },
     {
       id: '4',
-      name: 'Financial Summary Report',
-      type: 'FINANCIAL',
-      description: 'Revenue analysis, profit margins, and financial KPIs',
+      name: 'Product Performance Report',
+      type: 'PRODUCTS',
+      description: 'Analysis of most ordered products and category preferences',
       lastGenerated: '2024-01-09T16:20:00Z',
-      fileSize: '3.2 MB',
-      status: 'GENERATING'
+      fileSize: '1.6 MB',
+      status: 'GENERATING',
+      category: 'Products'
     },
     {
       id: '5',
-      name: 'Order Analytics Report',
-      type: 'ORDERS',
-      description: 'Order patterns, fulfillment metrics, and customer insights',
-      lastGenerated: '2024-01-09T11:30:00Z',
-      fileSize: '2.7 MB',
+      name: 'Budget Compliance Report',
+      type: 'BUDGET',
+      description: 'Budget tracking and compliance monitoring',
+      lastGenerated: '2024-01-09T13:30:00Z',
+      fileSize: '1.3 MB',
       status: 'READY',
-      downloadUrl: '/api/reports/download/order-analytics.pdf'
+      category: 'Financial',
+      downloadUrl: '/api/reports/download/budget-compliance.pdf'
+    },
+    {
+      id: '6',
+      name: 'Compliance Audit Report',
+      type: 'COMPLIANCE',
+      description: 'Regulatory compliance and audit trail documentation',
+      lastGenerated: '2024-01-08T10:00:00Z',
+      fileSize: '3.1 MB',
+      status: 'READY',
+      category: 'Compliance',
+      downloadUrl: '/api/reports/download/compliance-audit.pdf'
     }
   ]
 
-  // Mock metrics data
   const reportMetrics: ReportMetric[] = [
     {
-      title: 'Total Revenue',
-      value: '$124,592',
+      title: 'Total Spending',
+      value: '$45,892',
       change: '+12.5%',
       trend: 'up',
       icon: DollarSign
     },
     {
       title: 'Orders This Month',
-      value: '1,247',
+      value: '127',
       change: '+8.2%',
       trend: 'up',
-      icon: Package
+      icon: ShoppingCart
     },
     {
-      title: 'Active Users',
-      value: '892',
-      change: '+3.1%',
+      title: 'Cost Savings',
+      value: '$8,245',
+      change: '+22.1%',
       trend: 'up',
-      icon: Users
+      icon: Award
     },
     {
-      title: 'Inventory Turnover',
-      value: '4.2x',
-      change: '-2.1%',
-      trend: 'down',
-      icon: TrendingUp
+      title: 'Budget Utilization',
+      value: '68.4%',
+      change: '+5.2%',
+      trend: 'up',
+      icon: Target
     }
   ]
 
   useEffect(() => {
-    // Simulate API call
     setTimeout(() => {
       setReports(mockReports)
       setLoading(false)
@@ -162,31 +178,29 @@ export default function AdminReportsPage() {
 
   const getReportTypeIcon = (type: string) => {
     switch (type) {
-      case 'SALES':
-        return <BarChart3 className="h-4 w-4" />
-      case 'INVENTORY':
-        return <Package className="h-4 w-4" />
+      case 'SPENDING':
+        return <DollarSign className="h-4 w-4" />
+      case 'ORDERS':
+        return <ShoppingCart className="h-4 w-4" />
       case 'USERS':
         return <Users className="h-4 w-4" />
-      case 'ORDERS':
+      case 'PRODUCTS':
+        return <Package className="h-4 w-4" />
+      case 'COMPLIANCE':
         return <FileText className="h-4 w-4" />
-      case 'FINANCIAL':
-        return <DollarSign className="h-4 w-4" />
-      case 'ACTIVITY':
-        return <PieChart className="h-4 w-4" />
+      case 'BUDGET':
+        return <Target className="h-4 w-4" />
       default:
         return <FileText className="h-4 w-4" />
     }
   }
 
-  const filteredReports = reports.filter(report => 
-    reportType === 'ALL' || report.type === reportType
-  )
-
-  const generateReport = (reportId: string) => {
-    console.log('Generating report:', reportId)
-    // Implement report generation logic
-  }
+  const filteredReports = reports.filter(report => {
+    const matchesSearch = report.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         report.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesType = typeFilter === 'ALL' || report.type === typeFilter
+    return matchesSearch && matchesType
+  })
 
   if (loading) {
     return <div className="flex items-center justify-center h-96">Loading reports...</div>
@@ -196,8 +210,8 @@ export default function AdminReportsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Reports & Analytics</h1>
-          <p className="text-muted-foreground">Generate and download comprehensive business reports</p>
+          <h1 className="text-3xl font-bold">Company Reports</h1>
+          <p className="text-muted-foreground">Generate and analyze company spending, usage, and compliance reports</p>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline">
@@ -205,8 +219,8 @@ export default function AdminReportsPage() {
             Refresh All
           </Button>
           <Button>
-            <FileText className="h-4 w-4 mr-2" />
-            New Report
+            <Plus className="h-4 w-4 mr-2" />
+            Custom Report
           </Button>
         </div>
       </div>
@@ -224,7 +238,7 @@ export default function AdminReportsPage() {
               <CardContent>
                 <div className="text-2xl font-bold">{metric.value}</div>
                 <p className={`text-xs ${metric.trend === 'up' ? 'text-green-600' : metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'}`}>
-                  {metric.change} from last month
+                  {metric.change} from last period
                 </p>
               </CardContent>
             </Card>
@@ -235,6 +249,7 @@ export default function AdminReportsPage() {
       <Tabs defaultValue="reports" className="space-y-4">
         <TabsList>
           <TabsTrigger value="reports">Available Reports</TabsTrigger>
+          <TabsTrigger value="analytics">Quick Analytics</TabsTrigger>
           <TabsTrigger value="scheduled">Scheduled Reports</TabsTrigger>
           <TabsTrigger value="custom">Custom Reports</TabsTrigger>
         </TabsList>
@@ -247,20 +262,34 @@ export default function AdminReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="search">Search Reports</Label>
+                  <div className="relative">
+                    <FileText className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by name or description..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
+                
                 <div className="min-w-[200px]">
                   <Label>Report Type</Label>
-                  <Select value={reportType} onValueChange={setReportType}>
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ALL">All Types</SelectItem>
-                      <SelectItem value="SALES">Sales</SelectItem>
-                      <SelectItem value="INVENTORY">Inventory</SelectItem>
-                      <SelectItem value="USERS">Users</SelectItem>
-                      <SelectItem value="ORDERS">Orders</SelectItem>
-                      <SelectItem value="FINANCIAL">Financial</SelectItem>
-                      <SelectItem value="ACTIVITY">Activity</SelectItem>
+                      <SelectItem value="SPENDING">Spending Analysis</SelectItem>
+                      <SelectItem value="ORDERS">Order Reports</SelectItem>
+                      <SelectItem value="USERS">User Activity</SelectItem>
+                      <SelectItem value="PRODUCTS">Product Reports</SelectItem>
+                      <SelectItem value="BUDGET">Budget Reports</SelectItem>
+                      <SelectItem value="COMPLIANCE">Compliance</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -276,20 +305,8 @@ export default function AdminReportsPage() {
                       <SelectItem value="30_DAYS">Last 30 days</SelectItem>
                       <SelectItem value="90_DAYS">Last 90 days</SelectItem>
                       <SelectItem value="1_YEAR">Last year</SelectItem>
-                      <SelectItem value="CUSTOM">Custom range</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div className="min-w-[200px]">
-                  <Label>Custom Date</Label>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? selectedDate.toLocaleDateString() : "Pick a date"}
-                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -298,9 +315,9 @@ export default function AdminReportsPage() {
           {/* Reports Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Available Reports ({filteredReports.length})</CardTitle>
+              <CardTitle>Company Reports ({filteredReports.length})</CardTitle>
               <CardDescription>
-                Download generated reports or generate new ones
+                Generated reports for your company's procurement and usage analysis
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -310,6 +327,7 @@ export default function AdminReportsPage() {
                     <TableRow>
                       <TableHead>Report</TableHead>
                       <TableHead>Type</TableHead>
+                      <TableHead>Category</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Last Generated</TableHead>
@@ -329,6 +347,9 @@ export default function AdminReportsPage() {
                         <TableCell>
                           <Badge variant="outline">{report.type}</Badge>
                         </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{report.category}</Badge>
+                        </TableCell>
                         <TableCell className="max-w-xs">
                           <p className="text-sm text-muted-foreground truncate">
                             {report.description}
@@ -347,14 +368,6 @@ export default function AdminReportsPage() {
                                 Download
                               </Button>
                             )}
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => generateReport(report.id)}
-                            >
-                              <RefreshCcw className="h-3 w-3 mr-1" />
-                              Generate
-                            </Button>
                             <Button variant="outline" size="sm">
                               <Eye className="h-3 w-3" />
                             </Button>
@@ -369,6 +382,46 @@ export default function AdminReportsPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="analytics" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Spending Trends</CardTitle>
+                <CardDescription>
+                  Monthly spending patterns and trends
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <LineChart className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Spending Analytics</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Interactive spending trend analysis.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Category Breakdown</CardTitle>
+                <CardDescription>
+                  Spending distribution by product category
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <PieChart className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Category Analysis</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Visual breakdown of spending by category.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         <TabsContent value="scheduled" className="space-y-4">
           <Card>
             <CardHeader>
@@ -379,14 +432,14 @@ export default function AdminReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
-                <FileText className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No scheduled reports</h3>
+                <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Automated Reporting</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Get started by creating a scheduled report.
+                  Set up automatic report generation and delivery.
                 </p>
                 <div className="mt-6">
                   <Button>
-                    <FileText className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2" />
                     Schedule Report
                   </Button>
                 </div>
@@ -405,14 +458,14 @@ export default function AdminReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
-                <PieChart className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Custom Report Builder</h3>
+                <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Report Builder</h3>
                 <p className="mt-1 text-sm text-gray-500">
                   Build custom reports with drag-and-drop interface.
                 </p>
                 <div className="mt-6">
                   <Button>
-                    <LineChart className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2" />
                     Build Custom Report
                   </Button>
                 </div>

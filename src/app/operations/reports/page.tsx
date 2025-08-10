@@ -13,32 +13,35 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   FileText, 
   Download, 
-  Calendar as CalendarIcon,
-  TrendingUp,
-  DollarSign,
-  Users,
-  Package,
   BarChart3,
+  TrendingUp,
+  Package,
+  Truck,
+  ClipboardList,
+  Users,
+  DollarSign,
+  Calendar,
+  RefreshCcw,
+  Plus,
+  Eye,
   PieChart,
   LineChart,
-  Eye,
-  Filter,
-  RefreshCcw
+  Filter
 } from 'lucide-react'
-// import { format } from 'date-fns'
 
-interface ReportData {
+interface OperationsReport {
   id: string
   name: string
-  type: 'SALES' | 'INVENTORY' | 'USERS' | 'ORDERS' | 'FINANCIAL' | 'ACTIVITY'
+  type: 'PRODUCTION' | 'SHIPPING' | 'QUALITY' | 'INVENTORY' | 'PERFORMANCE' | 'OPERATIONAL'
   description: string
   lastGenerated: string
   fileSize: string
   status: 'READY' | 'GENERATING' | 'ERROR'
+  category: string
   downloadUrl?: string
 }
 
-interface ReportMetric {
+interface OperationsMetric {
   title: string
   value: string
   change: string
@@ -46,101 +49,114 @@ interface ReportMetric {
   icon: React.ElementType
 }
 
-export default function AdminReportsPage() {
+export default function OperationsReportsPage() {
   const { data: session } = useSession()
-  const [reports, setReports] = useState<ReportData[]>([])
+  const [reports, setReports] = useState<OperationsReport[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState<Date>()
-  const [reportType, setReportType] = useState<string>('ALL')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [typeFilter, setTypeFilter] = useState<string>('ALL')
   const [dateRange, setDateRange] = useState<string>('7_DAYS')
 
-  // Mock reports data
-  const mockReports: ReportData[] = [
+  const mockReports: OperationsReport[] = [
     {
       id: '1',
-      name: 'Sales Performance Report',
-      type: 'SALES',
-      description: 'Comprehensive sales analysis with revenue, trends, and top products',
+      name: 'Production Efficiency Report',
+      type: 'PRODUCTION',
+      description: 'Daily production metrics, throughput analysis, and efficiency trends',
       lastGenerated: '2024-01-10T14:30:00Z',
-      fileSize: '2.1 MB',
+      fileSize: '1.8 MB',
       status: 'READY',
-      downloadUrl: '/api/reports/download/sales-performance.pdf'
+      category: 'Operations',
+      downloadUrl: '/api/reports/download/production-efficiency.pdf'
     },
     {
       id: '2',
-      name: 'Inventory Status Report',
-      type: 'INVENTORY',
-      description: 'Current stock levels, low inventory alerts, and reorder recommendations',
-      lastGenerated: '2024-01-10T10:15:00Z',
-      fileSize: '1.8 MB',
+      name: 'Shipping Performance Dashboard',
+      type: 'SHIPPING',
+      description: 'Delivery metrics, carrier performance, and logistics analytics',
+      lastGenerated: '2024-01-10T12:15:00Z',
+      fileSize: '2.3 MB',
       status: 'READY',
-      downloadUrl: '/api/reports/download/inventory-status.pdf'
+      category: 'Logistics',
+      downloadUrl: '/api/reports/download/shipping-performance.pdf'
     },
     {
       id: '3',
-      name: 'User Activity Report',
-      type: 'USERS',
-      description: 'User engagement, login patterns, and activity analytics',
-      lastGenerated: '2024-01-10T09:45:00Z',
-      fileSize: '950 KB',
+      name: 'Quality Control Summary',
+      type: 'QUALITY',
+      description: 'Quality metrics, inspection results, and defect analysis',
+      lastGenerated: '2024-01-10T10:45:00Z',
+      fileSize: '1.2 MB',
       status: 'READY',
-      downloadUrl: '/api/reports/download/user-activity.pdf'
+      category: 'Quality',
+      downloadUrl: '/api/reports/download/quality-control.pdf'
     },
     {
       id: '4',
-      name: 'Financial Summary Report',
-      type: 'FINANCIAL',
-      description: 'Revenue analysis, profit margins, and financial KPIs',
-      lastGenerated: '2024-01-09T16:20:00Z',
-      fileSize: '3.2 MB',
-      status: 'GENERATING'
+      name: 'Inventory Operations Report',
+      type: 'INVENTORY',
+      description: 'Stock movements, turnover rates, and inventory optimization',
+      lastGenerated: '2024-01-10T09:20:00Z',
+      fileSize: '2.1 MB',
+      status: 'GENERATING',
+      category: 'Inventory'
     },
     {
       id: '5',
-      name: 'Order Analytics Report',
-      type: 'ORDERS',
-      description: 'Order patterns, fulfillment metrics, and customer insights',
-      lastGenerated: '2024-01-09T11:30:00Z',
-      fileSize: '2.7 MB',
+      name: 'Operations Performance KPIs',
+      type: 'PERFORMANCE',
+      description: 'Key performance indicators for operational efficiency',
+      lastGenerated: '2024-01-09T16:30:00Z',
+      fileSize: '1.5 MB',
       status: 'READY',
-      downloadUrl: '/api/reports/download/order-analytics.pdf'
+      category: 'Performance',
+      downloadUrl: '/api/reports/download/performance-kpis.pdf'
+    },
+    {
+      id: '6',
+      name: 'Operational Cost Analysis',
+      type: 'OPERATIONAL',
+      description: 'Cost breakdown, efficiency ratios, and budget analysis',
+      lastGenerated: '2024-01-09T14:15:00Z',
+      fileSize: '1.9 MB',
+      status: 'READY',
+      category: 'Finance',
+      downloadUrl: '/api/reports/download/cost-analysis.pdf'
     }
   ]
 
-  // Mock metrics data
-  const reportMetrics: ReportMetric[] = [
+  const operationsMetrics: OperationsMetric[] = [
     {
-      title: 'Total Revenue',
-      value: '$124,592',
-      change: '+12.5%',
+      title: 'Production Efficiency',
+      value: '94.2%',
+      change: '+2.3%',
       trend: 'up',
-      icon: DollarSign
+      icon: TrendingUp
     },
     {
-      title: 'Orders This Month',
-      value: '1,247',
-      change: '+8.2%',
+      title: 'Quality Pass Rate',
+      value: '96.8%',
+      change: '+1.1%',
       trend: 'up',
-      icon: Package
+      icon: ClipboardList
     },
     {
-      title: 'Active Users',
-      value: '892',
-      change: '+3.1%',
+      title: 'On-Time Shipping',
+      value: '92.5%',
+      change: '+0.8%',
       trend: 'up',
-      icon: Users
+      icon: Truck
     },
     {
       title: 'Inventory Turnover',
       value: '4.2x',
-      change: '-2.1%',
-      trend: 'down',
-      icon: TrendingUp
+      change: '+0.3x',
+      trend: 'up',
+      icon: Package
     }
   ]
 
   useEffect(() => {
-    // Simulate API call
     setTimeout(() => {
       setReports(mockReports)
       setLoading(false)
@@ -162,31 +178,29 @@ export default function AdminReportsPage() {
 
   const getReportTypeIcon = (type: string) => {
     switch (type) {
-      case 'SALES':
-        return <BarChart3 className="h-4 w-4" />
+      case 'PRODUCTION':
+        return <TrendingUp className="h-4 w-4" />
+      case 'SHIPPING':
+        return <Truck className="h-4 w-4" />
+      case 'QUALITY':
+        return <ClipboardList className="h-4 w-4" />
       case 'INVENTORY':
         return <Package className="h-4 w-4" />
-      case 'USERS':
-        return <Users className="h-4 w-4" />
-      case 'ORDERS':
-        return <FileText className="h-4 w-4" />
-      case 'FINANCIAL':
+      case 'PERFORMANCE':
+        return <BarChart3 className="h-4 w-4" />
+      case 'OPERATIONAL':
         return <DollarSign className="h-4 w-4" />
-      case 'ACTIVITY':
-        return <PieChart className="h-4 w-4" />
       default:
         return <FileText className="h-4 w-4" />
     }
   }
 
-  const filteredReports = reports.filter(report => 
-    reportType === 'ALL' || report.type === reportType
-  )
-
-  const generateReport = (reportId: string) => {
-    console.log('Generating report:', reportId)
-    // Implement report generation logic
-  }
+  const filteredReports = reports.filter(report => {
+    const matchesSearch = report.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         report.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesType = typeFilter === 'ALL' || report.type === typeFilter
+    return matchesSearch && matchesType
+  })
 
   if (loading) {
     return <div className="flex items-center justify-center h-96">Loading reports...</div>
@@ -196,8 +210,8 @@ export default function AdminReportsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Reports & Analytics</h1>
-          <p className="text-muted-foreground">Generate and download comprehensive business reports</p>
+          <h1 className="text-3xl font-bold">Operations Reports</h1>
+          <p className="text-muted-foreground">Generate and analyze operational performance reports</p>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline">
@@ -205,15 +219,15 @@ export default function AdminReportsPage() {
             Refresh All
           </Button>
           <Button>
-            <FileText className="h-4 w-4 mr-2" />
-            New Report
+            <Plus className="h-4 w-4 mr-2" />
+            Custom Report
           </Button>
         </div>
       </div>
 
       {/* Metrics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {reportMetrics.map((metric, index) => {
+        {operationsMetrics.map((metric, index) => {
           const Icon = metric.icon
           return (
             <Card key={index}>
@@ -224,7 +238,7 @@ export default function AdminReportsPage() {
               <CardContent>
                 <div className="text-2xl font-bold">{metric.value}</div>
                 <p className={`text-xs ${metric.trend === 'up' ? 'text-green-600' : metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'}`}>
-                  {metric.change} from last month
+                  {metric.change} from last period
                 </p>
               </CardContent>
             </Card>
@@ -234,9 +248,10 @@ export default function AdminReportsPage() {
 
       <Tabs defaultValue="reports" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="reports">Available Reports</TabsTrigger>
-          <TabsTrigger value="scheduled">Scheduled Reports</TabsTrigger>
-          <TabsTrigger value="custom">Custom Reports</TabsTrigger>
+          <TabsTrigger value="reports">Operations Reports</TabsTrigger>
+          <TabsTrigger value="analytics">Real-time Analytics</TabsTrigger>
+          <TabsTrigger value="kpis">Performance KPIs</TabsTrigger>
+          <TabsTrigger value="schedules">Scheduled Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="reports" className="space-y-4">
@@ -247,20 +262,34 @@ export default function AdminReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="search">Search Reports</Label>
+                  <div className="relative">
+                    <FileText className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by name or description..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
+                
                 <div className="min-w-[200px]">
                   <Label>Report Type</Label>
-                  <Select value={reportType} onValueChange={setReportType}>
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ALL">All Types</SelectItem>
-                      <SelectItem value="SALES">Sales</SelectItem>
+                      <SelectItem value="PRODUCTION">Production</SelectItem>
+                      <SelectItem value="SHIPPING">Shipping</SelectItem>
+                      <SelectItem value="QUALITY">Quality</SelectItem>
                       <SelectItem value="INVENTORY">Inventory</SelectItem>
-                      <SelectItem value="USERS">Users</SelectItem>
-                      <SelectItem value="ORDERS">Orders</SelectItem>
-                      <SelectItem value="FINANCIAL">Financial</SelectItem>
-                      <SelectItem value="ACTIVITY">Activity</SelectItem>
+                      <SelectItem value="PERFORMANCE">Performance</SelectItem>
+                      <SelectItem value="OPERATIONAL">Operational</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -276,20 +305,8 @@ export default function AdminReportsPage() {
                       <SelectItem value="30_DAYS">Last 30 days</SelectItem>
                       <SelectItem value="90_DAYS">Last 90 days</SelectItem>
                       <SelectItem value="1_YEAR">Last year</SelectItem>
-                      <SelectItem value="CUSTOM">Custom range</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div className="min-w-[200px]">
-                  <Label>Custom Date</Label>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? selectedDate.toLocaleDateString() : "Pick a date"}
-                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -300,7 +317,7 @@ export default function AdminReportsPage() {
             <CardHeader>
               <CardTitle>Available Reports ({filteredReports.length})</CardTitle>
               <CardDescription>
-                Download generated reports or generate new ones
+                Download operational reports or generate new ones
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -310,6 +327,7 @@ export default function AdminReportsPage() {
                     <TableRow>
                       <TableHead>Report</TableHead>
                       <TableHead>Type</TableHead>
+                      <TableHead>Category</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Last Generated</TableHead>
@@ -329,6 +347,9 @@ export default function AdminReportsPage() {
                         <TableCell>
                           <Badge variant="outline">{report.type}</Badge>
                         </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{report.category}</Badge>
+                        </TableCell>
                         <TableCell className="max-w-xs">
                           <p className="text-sm text-muted-foreground truncate">
                             {report.description}
@@ -347,14 +368,6 @@ export default function AdminReportsPage() {
                                 Download
                               </Button>
                             )}
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => generateReport(report.id)}
-                            >
-                              <RefreshCcw className="h-3 w-3 mr-1" />
-                              Generate
-                            </Button>
                             <Button variant="outline" size="sm">
                               <Eye className="h-3 w-3" />
                             </Button>
@@ -369,51 +382,65 @@ export default function AdminReportsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="scheduled" className="space-y-4">
+        <TabsContent value="analytics" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Scheduled Reports</CardTitle>
+              <CardTitle>Real-time Operations Analytics</CardTitle>
               <CardDescription>
-                Manage automatically generated reports
+                Live operational metrics and performance dashboards
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
-                <FileText className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No scheduled reports</h3>
+                <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Analytics Dashboard</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Get started by creating a scheduled report.
+                  Real-time operational analytics and performance metrics.
                 </p>
-                <div className="mt-6">
-                  <Button>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Schedule Report
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="custom" className="space-y-4">
+        <TabsContent value="kpis" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Custom Report Builder</CardTitle>
+              <CardTitle>Performance KPIs</CardTitle>
               <CardDescription>
-                Create custom reports with specific metrics and filters
+                Key performance indicators and operational benchmarks
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
-                <PieChart className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Custom Report Builder</h3>
+                <TrendingUp className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">KPI Dashboard</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Build custom reports with drag-and-drop interface.
+                  Performance indicators and operational benchmarking.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="schedules" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Scheduled Reports</CardTitle>
+              <CardDescription>
+                Automated report generation and delivery schedules
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Scheduled Reports</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Automated report scheduling and delivery management.
                 </p>
                 <div className="mt-6">
                   <Button>
-                    <LineChart className="h-4 w-4 mr-2" />
-                    Build Custom Report
+                    <Plus className="h-4 w-4 mr-2" />
+                    Schedule Report
                   </Button>
                 </div>
               </div>

@@ -345,7 +345,7 @@ export function RoleBasedNav({ collapsed = false }: RoleBasedNavProps) {
 
   return (
     <TooltipProvider>
-      <nav className={cn("flex-1 space-y-1 py-4", collapsed ? "px-1" : "px-2")}>
+      <nav className={cn("flex-1 space-y-1", collapsed ? "px-1" : "px-2")}>
         {/* Role Badge - Hidden when collapsed */}
         {!collapsed && (
           <div className="mb-4">
@@ -409,7 +409,7 @@ export function RoleBasedNav({ collapsed = false }: RoleBasedNavProps) {
         })}
 
         {/* Quick Dashboard Link */}
-        <div className={cn("pt-4 mt-4 border-t", collapsed ? "border-border" : "border-border")}>
+        <div className={cn("pt-4 mt-4 border-t border-border")}>
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>

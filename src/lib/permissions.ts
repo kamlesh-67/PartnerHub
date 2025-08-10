@@ -1,4 +1,4 @@
-export type UserRole = 'SUPER_ADMIN' | 'ACCOUNT_ADMIN' | 'BUYER' | 'OPERATION'
+export type UserRole = 'SUPER_ADMIN' | 'ACCOUNT_ADMIN' | 'BUYER' | 'OPERATION';
 
 export interface RolePermissions {
   // Page Access
@@ -12,7 +12,7 @@ export interface RolePermissions {
   canAccessInventoryManagement: boolean
   canAccessSystemSettings: boolean
   canAccessReports: boolean
-  
+
   // Data Operations
   canCreateProducts: boolean
   canEditProducts: boolean
@@ -33,7 +33,7 @@ export interface RolePermissions {
   canExportData: boolean
   canManageSettings: boolean
   canViewAuditLogs: boolean
-  
+
   // Shopping & Orders
   canPlaceOrders: boolean
   canViewOwnOrders: boolean
@@ -41,7 +41,7 @@ export interface RolePermissions {
   canAddToCart: boolean
   canCreateBulkOrders: boolean
   canApproveBulkOrders: boolean
-  
+
   // Notifications
   canSendGlobalNotifications: boolean
   canViewNotifications: boolean
@@ -60,7 +60,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canAccessInventoryManagement: true,
     canAccessSystemSettings: true,
     canAccessReports: true,
-    
+
     // Data Operations
     canCreateProducts: true,
     canEditProducts: true,
@@ -81,7 +81,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canExportData: true,
     canManageSettings: true,
     canViewAuditLogs: true,
-    
+
     // Shopping & Orders
     canPlaceOrders: true,
     canViewOwnOrders: true,
@@ -89,12 +89,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canAddToCart: true,
     canCreateBulkOrders: true,
     canApproveBulkOrders: true,
-    
+
     // Notifications
     canSendGlobalNotifications: true,
     canViewNotifications: true,
   },
-  
+
   ACCOUNT_ADMIN: {
     // Page Access
     canAccessAdminPanel: true,
@@ -107,7 +107,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canAccessInventoryManagement: true,
     canAccessSystemSettings: false, // Limited settings only
     canAccessReports: true, // Company reports only
-    
+
     // Data Operations
     canCreateProducts: true,
     canEditProducts: true,
@@ -128,7 +128,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canExportData: true, // Company data only
     canManageSettings: false, // Limited settings
     canViewAuditLogs: false,
-    
+
     // Shopping & Orders
     canPlaceOrders: true,
     canViewOwnOrders: true,
@@ -136,12 +136,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canAddToCart: true,
     canCreateBulkOrders: true,
     canApproveBulkOrders: true, // Company bulk orders only
-    
+
     // Notifications
     canSendGlobalNotifications: false, // Company notifications only
     canViewNotifications: true,
   },
-  
+
   OPERATION: {
     // Page Access
     canAccessAdminPanel: true, // Limited admin panel
@@ -154,7 +154,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canAccessInventoryManagement: true,
     canAccessSystemSettings: false,
     canAccessReports: true, // Operational reports only
-    
+
     // Data Operations
     canCreateProducts: true,
     canEditProducts: true,
@@ -175,7 +175,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canExportData: true, // Operational data only
     canManageSettings: false,
     canViewAuditLogs: false,
-    
+
     // Shopping & Orders
     canPlaceOrders: false,
     canViewOwnOrders: false,
@@ -183,12 +183,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canAddToCart: false,
     canCreateBulkOrders: false,
     canApproveBulkOrders: false,
-    
+
     // Notifications
     canSendGlobalNotifications: false,
     canViewNotifications: true,
   },
-  
+
   BUYER: {
     // Page Access
     canAccessAdminPanel: false,
@@ -201,7 +201,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canAccessInventoryManagement: false,
     canAccessSystemSettings: false,
     canAccessReports: false,
-    
+
     // Data Operations
     canCreateProducts: false,
     canEditProducts: false,
@@ -222,7 +222,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canExportData: false,
     canManageSettings: false,
     canViewAuditLogs: false,
-    
+
     // Shopping & Orders
     canPlaceOrders: true,
     canViewOwnOrders: true,
@@ -230,7 +230,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canAddToCart: true,
     canCreateBulkOrders: true,
     canApproveBulkOrders: false,
-    
+
     // Notifications
     canSendGlobalNotifications: false,
     canViewNotifications: true,
@@ -244,10 +244,19 @@ export function hasPermission(userRole: UserRole, permission: keyof RolePermissi
 export function getUserPermissions(userRole: UserRole): RolePermissions {
   return ROLE_PERMISSIONS[userRole]
 }
+function getUserRole(): UserRole { // ✅ Return UserRole, not string
+  // your logic
+  return 'SUPER_ADMIN'; // must be one of the UserRole literals
+}
 
 export function canAccessPage(userRole: UserRole, page: string): boolean {
   const permissions = getUserPermissions(userRole)
-  
+
+  // Super Admin has access to everything
+  if (userRole === 'SUPER_ADMIN') {
+    return true
+  }
+
   switch (page) {
     case '/admin':
     case '/admin/dashboard':
@@ -255,6 +264,7 @@ export function canAccessPage(userRole: UserRole, page: string): boolean {
     case '/admin/analytics':
       return permissions.canAccessAnalytics
     case '/admin/audit':
+    case '/admin/system-logs':
       return permissions.canAccessAuditLogs
     case '/admin/users':
       return permissions.canAccessUserManagement
@@ -270,7 +280,36 @@ export function canAccessPage(userRole: UserRole, page: string): boolean {
       return permissions.canAccessSystemSettings
     case '/admin/reports':
       return permissions.canAccessReports
+
+    // Operations pages
+    case '/operations':
+    case '/operations/dashboard':
+    case '/operations/orders':
+    case '/operations/inventory':
+    case '/operations/products':
+    case '/operations/shipping':
+    case '/operations/quality':
+    case '/operations/reports':
+      const userRole1: UserRole = getUserRole();
+      const isPrivileged1 = userRole1 === 'OPERATION' || userRole1 === 'SUPER_ADMIN';
+      return isPrivileged1
+
+    // Company pages
+    case '/company':
+    case '/company/dashboard':
+    case '/company/users':
+    case '/company/analytics':
+    case '/company/products':
+    case '/company/orders':
+    case '/company/reports':
+      const userRole2: UserRole = getUserRole();
+      const isPrivileged2 = userRole2 === 'ACCOUNT_ADMIN' || userRole2 === 'SUPER_ADMIN'
+      return isPrivileged2
+      //return userRole === 'ACCOUNT_ADMIN' || userRole === 'SUPER_ADMIN'
+
+    // Shopping pages
     case '/products':
+    case '/search':
     case '/cart':
     case '/checkout':
       return true // Public pages (with auth)
@@ -278,6 +317,17 @@ export function canAccessPage(userRole: UserRole, page: string): boolean {
       return permissions.canViewOwnOrders
     case '/bulk-orders':
       return permissions.canCreateBulkOrders
+    case '/wishlist':
+      const userRole3: UserRole = getUserRole();
+      const isPrivileged3 = userRole3 === 'BUYER' || userRole3 === 'ACCOUNT_ADMIN' || userRole3 === 'SUPER_ADMIN'
+      return isPrivileged3
+//      return userRole === 'BUYER' || userRole === 'ACCOUNT_ADMIN' || userRole === 'SUPER_ADMIN'
+    case '/shop/dashboard':
+      const userRole4: UserRole = getUserRole();
+      const isPrivileged4 = userRole4 === 'BUYER' || userRole4 === 'SUPER_ADMIN';
+      return isPrivileged4
+      // return userRole === 'BUYER' || userRole === 'SUPER_ADMIN'
+
     default:
       return true // Default allow for unknown pages
   }
