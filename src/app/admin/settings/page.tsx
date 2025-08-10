@@ -92,7 +92,7 @@ export default function AdminSettingsPage() {
   // Mock settings data (in a real app, this would come from an API)
   const mockSettings: SystemSettings = {
     platform: {
-      siteName: 'B2B Commerce Platform',
+      siteName: 'PartnerHub Portal',
       siteUrl: 'https://b2b.company.com',
       adminEmail: 'admin@company.com',
       timezone: 'America/New_York',
@@ -290,12 +290,12 @@ export default function AdminSettingsPage() {
       </div>
 
       <div className="space-y-6">
-        {/* Platform Settings */}
+        {/* Portal Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <Globe className="h-5 w-5 mr-2" />
-              Platform Settings
+              Portal Settings
             </CardTitle>
             <CardDescription>Basic platform configuration and branding</CardDescription>
           </CardHeader>

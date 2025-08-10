@@ -118,9 +118,20 @@ export default function AdminOrdersPage() {
     fetchCompanies()
   }, [session, status, userRole, router])
 
+  // Refetch orders when filters change
+  useEffect(() => {
+    if (session) {
+      fetchOrders()
+    }
+  }, [selectedStatus, selectedCompany])
+
   const fetchOrders = async () => {
     try {
-      const response = await fetch('/api/admin/orders')
+      const params = new URLSearchParams()
+      if (selectedStatus !== 'all') params.append('status', selectedStatus)
+      if (selectedCompany !== 'all') params.append('company', selectedCompany)
+      
+      const response = await fetch(`/api/orders?${params.toString()}`)
       if (response.ok) {
         const data = await response.json()
         setOrders(data.orders)

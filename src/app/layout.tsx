@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "B2B Commerce Platform",
-  description: "Modern B2B commerce solution with role-based access control",
+  title: "PartnerHub Portal",
+  description: "Modern partner commerce solution with role-based access control",
 };
 
 export default function RootLayout({

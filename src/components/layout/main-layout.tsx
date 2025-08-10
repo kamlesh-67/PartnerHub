@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { Header } from './header'
 import { Footer } from './footer'
-import { Sidebar } from './sidebar'
+import { ModernSidebar } from './modern-sidebar'
 import { Toaster } from '@/components/ui/sonner'
+import { cn } from '@/lib/utils'
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -14,6 +16,7 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const { data: session } = useSession()
   const pathname = usePathname()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true) // Default to collapsed
 
   // Determine if we should show sidebar based on user role and current path
   const shouldShowSidebar = session && (
@@ -44,13 +47,20 @@ export function MainLayout({ children }: MainLayoutProps) {
   }
 
   if (shouldShowSidebar) {
-    // Layout with sidebar for authenticated dashboard pages
+    // Layout with modern sidebar for authenticated dashboard pages
     return (
       <div className="relative flex min-h-screen">
-        <Sidebar />
-        <div className="flex flex-1 flex-col">
+        <ModernSidebar onToggle={setSidebarCollapsed} />
+        <div 
+          className={cn(
+            "flex flex-1 flex-col main-content-area",
+            sidebarCollapsed && "sidebar-collapsed"
+          )}
+        >
           <Header />
-          <main className="flex-1 overflow-auto">{children}</main>
+          <main className="flex-1 overflow-auto p-4 lg:p-6">
+            {children}
+          </main>
         </div>
         <Toaster />
       </div>

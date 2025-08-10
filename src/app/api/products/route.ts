@@ -18,19 +18,49 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || ''
     const category = searchParams.get('category')
     const status = searchParams.get('status')
+    const companyFilter = searchParams.get('company') // For super admin filtering
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '12')
     const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = {}
 
-    // Search filter
-    if (search) {
+    // Company privacy controls
+    if (session.user.role === 'SUPER_ADMIN') {
+      // Super admin can see all products or filter by company
+      if (companyFilter && companyFilter !== 'all') {
+        if (companyFilter === 'global') {
+          where.companyId = null // Global products (no company)
+        } else {
+          where.companyId = companyFilter
+        }
+      }
+    } else {
+      // All other roles can only see their own company products + global products
       where.OR = [
+        { companyId: session.user.companyId }, // Their company products
+        { companyId: null }, // Global products
+      ]
+    }
+
+    // Search filter - combine with company filter
+    if (search) {
+      const searchConditions = [
         { name: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
         { sku: { contains: search, mode: 'insensitive' } },
       ]
+      
+      if (where.OR) {
+        // Combine search with existing company filter
+        where.AND = [
+          { OR: where.OR },
+          { OR: searchConditions }
+        ]
+        delete where.OR
+      } else {
+        where.OR = searchConditions
+      }
     }
 
     // Category filter
@@ -54,6 +84,12 @@ export async function GET(request: NextRequest) {
               id: true,
               name: true,
               slug: true,
+            },
+          },
+          company: {
+            select: {
+              id: true,
+              name: true,
             },
           },
         },
@@ -118,6 +154,7 @@ export async function POST(request: NextRequest) {
       images,
       tags,
       categoryId,
+      companyId, // Company assignment from form
     } = body
 
     // Validate required fields
@@ -126,6 +163,16 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields: name, sku, price, categoryId' },
         { status: 400 }
       )
+    }
+
+    // Determine company assignment based on user role
+    let assignedCompanyId = null
+    if (session.user.role === 'SUPER_ADMIN') {
+      // Super admin can assign to any company or leave as global (null)
+      assignedCompanyId = companyId === 'global' ? null : companyId
+    } else {
+      // Other roles can only assign to their own company
+      assignedCompanyId = session.user.companyId
     }
 
     // Check if SKU already exists
@@ -175,6 +222,7 @@ export async function POST(request: NextRequest) {
         images: images ? JSON.stringify(images) : null,
         tags: tags ? JSON.stringify(tags) : null,
         categoryId,
+        companyId: assignedCompanyId,
       },
       include: {
         category: {
@@ -182,6 +230,12 @@ export async function POST(request: NextRequest) {
             id: true,
             name: true,
             slug: true,
+          },
+        },
+        company: {
+          select: {
+            id: true,
+            name: true,
           },
         },
       },

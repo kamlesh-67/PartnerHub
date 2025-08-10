@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { hasPermission, canAccessPage, type UserRole } from '@/lib/permissions'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   BarChart3,
   Building2,
@@ -33,7 +34,11 @@ interface NavItem {
   badge?: boolean
 }
 
-export function RoleBasedNav() {
+interface RoleBasedNavProps {
+  collapsed?: boolean
+}
+
+export function RoleBasedNav({ collapsed = false }: RoleBasedNavProps) {
   const { data: session } = useSession()
   const pathname = usePathname()
   const userRole = session?.user?.role as UserRole
@@ -85,16 +90,30 @@ export function RoleBasedNav() {
       roles: ['SUPER_ADMIN', 'ACCOUNT_ADMIN', 'OPERATION']
     },
     {
-      title: 'Inventory',
+      title: 'Inventory Management',
       href: '/admin/inventory',
       icon: Warehouse,
       permission: 'canAccessInventoryManagement',
       roles: ['SUPER_ADMIN', 'ACCOUNT_ADMIN', 'OPERATION']
     },
     {
+      title: 'Reports & Analytics',
+      href: '/admin/reports',
+      icon: FileText,
+      permission: 'canAccessReports',
+      roles: ['SUPER_ADMIN', 'ACCOUNT_ADMIN', 'OPERATION']
+    },
+    {
+      title: 'System Logs',
+      href: '/admin/system-logs',
+      icon: Shield,
+      permission: 'canAccessAuditLogs',
+      roles: ['SUPER_ADMIN']
+    },
+    {
       title: 'Audit Logs',
       href: '/admin/audit',
-      icon: Shield,
+      icon: ClipboardList,
       permission: 'canAccessAuditLogs',
       roles: ['SUPER_ADMIN']
     },
@@ -105,55 +124,96 @@ export function RoleBasedNav() {
       permission: 'canAccessSystemSettings',
       roles: ['SUPER_ADMIN']
     },
+
+    // Operations Pages (Available to Super Admin)
     {
-      title: 'Reports',
-      href: '/admin/reports',
+      title: 'Operations Dashboard',
+      href: '/operations/dashboard',
+      icon: Home,
+      roles: ['SUPER_ADMIN', 'OPERATION']
+    },
+    {
+      title: 'Order Processing',
+      href: '/operations/orders',
+      icon: ShoppingCart,
+      permission: 'canAccessOrderManagement',
+      roles: ['SUPER_ADMIN', 'OPERATION']
+    },
+    {
+      title: 'Operations Inventory',
+      href: '/operations/inventory',
+      icon: Warehouse,
+      permission: 'canAccessInventoryManagement',
+      roles: ['SUPER_ADMIN', 'OPERATION']
+    },
+    {
+      title: 'Product Catalog Ops',
+      href: '/operations/products',
+      icon: Package,
+      permission: 'canAccessProductManagement',
+      roles: ['SUPER_ADMIN', 'OPERATION']
+    },
+    {
+      title: 'Shipping Management',
+      href: '/operations/shipping',
+      icon: Truck,
+      roles: ['SUPER_ADMIN', 'OPERATION']
+    },
+    {
+      title: 'Quality Control',
+      href: '/operations/quality',
+      icon: AlertTriangle,
+      roles: ['SUPER_ADMIN', 'OPERATION']
+    },
+    {
+      title: 'Operations Reports',
+      href: '/operations/reports',
       icon: FileText,
       permission: 'canAccessReports',
-      roles: ['SUPER_ADMIN', 'ACCOUNT_ADMIN', 'OPERATION']
+      roles: ['SUPER_ADMIN', 'OPERATION']
     },
 
-    // Company Admin Navigation
+    // Company Admin Navigation (Available to Super Admin)
     {
       title: 'Company Dashboard',
       href: '/company/dashboard',
       icon: Home,
-      roles: ['ACCOUNT_ADMIN']
+      roles: ['SUPER_ADMIN', 'ACCOUNT_ADMIN']
     },
     {
       title: 'Team Management',
       href: '/company/users',
       icon: Users,
       permission: 'canAccessUserManagement',
-      roles: ['ACCOUNT_ADMIN']
+      roles: ['SUPER_ADMIN', 'ACCOUNT_ADMIN']
     },
     {
       title: 'Company Analytics',
       href: '/company/analytics',
       icon: BarChart3,
       permission: 'canAccessAnalytics',
-      roles: ['ACCOUNT_ADMIN']
+      roles: ['SUPER_ADMIN', 'ACCOUNT_ADMIN']
     },
     {
       title: 'Company Products',
       href: '/company/products',
       icon: Package,
       permission: 'canAccessProductManagement',
-      roles: ['ACCOUNT_ADMIN']
+      roles: ['SUPER_ADMIN', 'ACCOUNT_ADMIN']
     },
     {
       title: 'Company Orders',
       href: '/company/orders',
       icon: ShoppingCart,
       permission: 'canAccessOrderManagement',
-      roles: ['ACCOUNT_ADMIN']
+      roles: ['SUPER_ADMIN', 'ACCOUNT_ADMIN']
     },
     {
       title: 'Company Reports',
       href: '/company/reports',
       icon: FileText,
       permission: 'canAccessReports',
-      roles: ['ACCOUNT_ADMIN']
+      roles: ['SUPER_ADMIN', 'ACCOUNT_ADMIN']
     },
 
     // Buyer Navigation
@@ -284,60 +344,110 @@ export function RoleBasedNav() {
   if (filteredNavItems.length === 0) return null
 
   return (
-    <nav className="flex-1 space-y-1 px-2 py-4">
-      {/* Role Badge */}
-      <div className="mb-4">
-        <div className={cn(
-          "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
-          userRole === 'SUPER_ADMIN' && "bg-red-100 text-red-800",
-          userRole === 'ACCOUNT_ADMIN' && "bg-blue-100 text-blue-800",
-          userRole === 'BUYER' && "bg-purple-100 text-purple-800",
-          userRole === 'OPERATION' && "bg-green-100 text-green-800"
-        )}>
-          {userRole.replace('_', ' ')}
-        </div>
-      </div>
+    <TooltipProvider>
+      <nav className={cn("flex-1 space-y-1 py-4", collapsed ? "px-1" : "px-2")}>
+        {/* Role Badge - Hidden when collapsed */}
+        {!collapsed && (
+          <div className="mb-4">
+            <div className={cn(
+              "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
+              userRole === 'SUPER_ADMIN' && "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300",
+              userRole === 'ACCOUNT_ADMIN' && "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300",
+              userRole === 'BUYER' && "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300",
+              userRole === 'OPERATION' && "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+            )}>
+              {userRole.replace('_', ' ')}
+            </div>
+          </div>
+        )}
 
-      {/* Navigation Items */}
-      {filteredNavItems.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-        const Icon = item.icon
+        {/* Navigation Items */}
+        {filteredNavItems.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+          const Icon = item.icon
 
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200',
-              isActive
-                ? 'bg-gray-100 text-gray-900'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-            )}
-          >
-            <Icon
+          const linkContent = (
+            <Link
+              key={item.href}
+              href={item.href}
               className={cn(
-                'mr-3 h-5 w-5 flex-shrink-0',
-                isActive ? 'text-gray-500' : 'text-gray-400 group-hover:text-gray-500'
+                'group flex items-center text-sm font-medium rounded-md transition-colors duration-200',
+                collapsed ? 'px-2 py-3 justify-center' : 'px-2 py-2',
+                isActive
+                  ? 'bg-secondary text-secondary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
-            />
-            <span className="flex-1">{item.title}</span>
-            {item.badge && (
-              <span className="ml-auto inline-block h-2 w-2 bg-blue-600 rounded-full"></span>
-            )}
-          </Link>
-        )
-      })}
+            >
+              <Icon
+                className={cn(
+                  'h-5 w-5 flex-shrink-0',
+                  collapsed ? '' : 'mr-3',
+                  isActive ? 'text-secondary-foreground' : 'text-muted-foreground group-hover:text-accent-foreground'
+                )}
+              />
+              {!collapsed && (
+                <>
+                  <span className="flex-1">{item.title}</span>
+                  {item.badge && (
+                    <span className="ml-auto inline-block h-2 w-2 bg-primary rounded-full"></span>
+                  )}
+                </>
+              )}
+            </Link>
+          )
 
-      {/* Quick Dashboard Link */}
-      <div className="pt-4 mt-4 border-t border-gray-200">
-        <Link
-          href={getDashboardPath(userRole)}
-          className="group flex items-center px-2 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md"
-        >
-          <Home className="mr-3 h-4 w-4 text-gray-400 group-hover:text-gray-500" />
-          <span>Dashboard</span>
-        </Link>
-      </div>
-    </nav>
+          return collapsed ? (
+            <Tooltip key={item.href}>
+              <TooltipTrigger asChild>
+                {linkContent}
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{item.title}</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : linkContent
+        })}
+
+        {/* Quick Dashboard Link */}
+        <div className={cn("pt-4 mt-4 border-t", collapsed ? "border-border" : "border-border")}>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={getDashboardPath(userRole)}
+                  className={cn(
+                    'group flex items-center text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md',
+                    collapsed ? 'px-2 py-3 justify-center' : 'px-2 py-2'
+                  )}
+                >
+                  <Home className={cn(
+                    'h-4 w-4 text-muted-foreground group-hover:text-accent-foreground',
+                    collapsed ? '' : 'mr-3'
+                  )} />
+                  {!collapsed && <span>Dashboard</span>}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Dashboard</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link
+              href={getDashboardPath(userRole)}
+              className={cn(
+                'group flex items-center text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md',
+                collapsed ? 'px-2 py-3 justify-center' : 'px-2 py-2'
+              )}
+            >
+              <Home className={cn(
+                'h-4 w-4 text-muted-foreground group-hover:text-accent-foreground',
+                collapsed ? '' : 'mr-3'
+              )} />
+              {!collapsed && <span>Dashboard</span>}
+            </Link>
+          )}
+        </div>
+      </nav>
+    </TooltipProvider>
   )
 }

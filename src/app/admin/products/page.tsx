@@ -20,7 +20,8 @@ import {
   MoreVertical,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Building2
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -51,6 +52,10 @@ interface Product {
     name: string
     slug: string
   }
+  company?: {
+    id: string
+    name: string
+  }
   createdAt: string
   updatedAt: string
 }
@@ -69,10 +74,12 @@ export default function AdminProductsPage() {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [companies, setCompanies] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
+  const [selectedCompany, setSelectedCompany] = useState('all')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
@@ -111,6 +118,27 @@ export default function AdminProductsPage() {
     }
   }, [session])
 
+  // Fetch companies for super admin filtering
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      if (session?.user?.role !== 'SUPER_ADMIN') return
+      
+      try {
+        const response = await fetch('/api/companies')
+        if (response.ok) {
+          const data = await response.json()
+          setCompanies(data.companies || [])
+        }
+      } catch (error) {
+        console.error('Error fetching companies:', error)
+      }
+    }
+
+    if (session?.user?.role === 'SUPER_ADMIN') {
+      fetchCompanies()
+    }
+  }, [session])
+
   // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
@@ -124,6 +152,7 @@ export default function AdminProductsPage() {
         if (searchQuery) params.append('search', searchQuery)
         if (selectedCategory !== 'all') params.append('category', selectedCategory)
         if (selectedStatus !== 'all') params.append('status', selectedStatus)
+        if (selectedCompany !== 'all') params.append('company', selectedCompany)
 
         const response = await fetch(`/api/products?${params.toString()}`)
         if (response.ok) {
@@ -143,7 +172,7 @@ export default function AdminProductsPage() {
     if (session?.user && ['SUPER_ADMIN', 'ACCOUNT_ADMIN', 'OPERATION'].includes(session.user.role)) {
       fetchProducts()
     }
-  }, [session, searchQuery, selectedCategory, selectedStatus, page])
+  }, [session, searchQuery, selectedCategory, selectedStatus, selectedCompany, page])
 
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return
@@ -214,6 +243,15 @@ export default function AdminProductsPage() {
     ...categories.map(category => ({
       value: category.slug,
       label: `${category.name} (${category._count.products})`
+    }))
+  ]
+
+  const companyOptions = [
+    { value: 'all', label: 'All Companies' },
+    { value: 'global', label: 'Global Products' },
+    ...companies.map(company => ({
+      value: company.id,
+      label: company.name
     }))
   ]
 
@@ -304,6 +342,23 @@ export default function AdminProductsPage() {
             ))}
           </SelectContent>
         </Select>
+
+        {/* Company filter - only show for Super Admin */}
+        {session.user.role === 'SUPER_ADMIN' && (
+          <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+            <SelectTrigger className="w-full lg:w-48">
+              <Building2 className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {companyOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Products Grid */}
@@ -337,6 +392,8 @@ export default function AdminProductsPage() {
                     <CardTitle className="text-lg line-clamp-2">{product.name}</CardTitle>
                     <CardDescription className="mt-1">
                       SKU: {product.sku}
+                      <br />
+                      Company: {product.company?.name || 'Global'}
                     </CardDescription>
                   </div>
                   

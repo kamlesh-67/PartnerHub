@@ -502,7 +502,7 @@ export default function SuperAdminDashboard() {
             <Database className="h-5 w-5 mr-2" />
             System Overview
           </CardTitle>
-          <CardDescription>Platform health and key metrics</CardDescription>
+          <CardDescription>Portal health and key metrics</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

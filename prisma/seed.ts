@@ -96,10 +96,10 @@ async function main() {
   // Create Super Admin
   console.log('👑 Creating Super Admin...')
   const superAdmin = await prisma.user.upsert({
-    where: { email: 'admin@b2bcommerce.com' },
+    where: { email: 'admin@partnerhub.com' },
     update: {},
     create: {
-      email: 'admin@b2bcommerce.com',
+      email: 'admin@partnerhub.com',
       name: 'Super Administrator',
       password: hashedPassword,
       role: 'SUPER_ADMIN',
@@ -112,11 +112,11 @@ async function main() {
   console.log('⚙️ Creating Operation users...')
   const operationUsers = [
     {
-      email: 'operations@b2bcommerce.com',
+      email: 'operations@partnerhub.com',
       name: 'Operations Manager',
     },
     {
-      email: 'warehouse@b2bcommerce.com',
+      email: 'warehouse@partnerhub.com',
       name: 'Warehouse Manager',
     }
   ]
@@ -294,8 +294,8 @@ async function main() {
   console.log(`- Users: 1 Super Admin + 2 Operations + ${createdCompanies.length * 4} Company Users`)
   
   console.log('\n🔑 Login Credentials (password: password123):')
-  console.log('Super Admin: admin@b2bcommerce.com')
-  console.log('Operations: operations@b2bcommerce.com, warehouse@b2bcommerce.com')
+  console.log('Super Admin: admin@partnerhub.com')
+  console.log('Operations: operations@partnerhub.com, warehouse@partnerhub.com')
   console.log('\nCompany Users:')
   for (const company of createdCompanies) {
     console.log(`${company.name}:`)

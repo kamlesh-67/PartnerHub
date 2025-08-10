@@ -14,8 +14,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Build where clause for cart items with company privacy
+    const cartWhere: any = { userId: session.user.id }
+    
+    // Apply company privacy filter to products
+    if (session.user.role !== 'SUPER_ADMIN') {
+      cartWhere.product = {
+        OR: [
+          { companyId: session.user.companyId },
+          { companyId: null }
+        ]
+      }
+    }
+
     const cartItems = await prisma.cartItem.findMany({
-      where: { userId: session.user.id },
+      where: cartWhere,
       include: {
         product: {
           select: {
@@ -26,7 +39,14 @@ export async function GET(request: NextRequest) {
             images: true,
             sku: true,
             stock: true,
-            status: true
+            status: true,
+            companyId: true,
+            company: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
           }
         }
       },
@@ -87,13 +107,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid product or quantity' }, { status: 400 })
     }
 
-    // Check if product exists and is available
-    const product = await prisma.product.findUnique({
-      where: { id: productId }
+    // Check if product exists and is available with company privacy controls
+    const productWhere: any = { id: productId }
+    
+    // Apply company privacy filter
+    if (session.user.role === 'SUPER_ADMIN') {
+      // Super admin can add any product to cart
+    } else {
+      // Other roles can only add their own company products + global products
+      productWhere.OR = [
+        { companyId: session.user.companyId },
+        { companyId: null }
+      ]
+    }
+
+    const product = await prisma.product.findFirst({
+      where: productWhere
     })
 
     if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Product not found or not accessible' }, { status: 404 })
     }
 
     if (product.status !== 'ACTIVE') {

@@ -125,6 +125,7 @@ model Company {
   users       User[]
   addresses   Address[]
   orders      Order[]
+  products    Product[]
   
   @@map("companies")
 }
@@ -193,6 +194,8 @@ model Product {
   tags        String?       // JSON array of tags
   categoryId  String
   category    Category      @relation(fields: [categoryId], references: [id])
+  companyId   String?       // Company that owns this product (null for super admin products)
+  company     Company?      @relation(fields: [companyId], references: [id])
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   

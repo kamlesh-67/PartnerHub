@@ -63,12 +63,12 @@ export default function Home() {
           <div className="flex items-center justify-center mb-6">
             <Building2 className="h-12 w-12 text-primary mr-4" />
             <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              B2B Commerce Platform
+              PartnerHub Portal
             </h1>
           </div>
           
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Modern B2B commerce solution with role-based access control, 
+            Modern partner commerce solution with role-based access control, 
             multi-company support, and advanced features for enterprise needs.
           </p>
 

@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const dateFrom = searchParams.get('dateFrom')
     const dateTo = searchParams.get('dateTo')
+    const companyFilter = searchParams.get('company') // For super admin filtering
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
@@ -31,6 +32,15 @@ export async function GET(request: NextRequest) {
       where.userId = session.user.id
     } else if (session.user.role === 'ACCOUNT_ADMIN') {
       where.companyId = session.user.companyId
+    } else if (session.user.role === 'SUPER_ADMIN') {
+      // Super admin can filter by company or see all
+      if (companyFilter && companyFilter !== 'all') {
+        if (companyFilter === 'individual') {
+          where.companyId = null // Individual buyer orders
+        } else {
+          where.companyId = companyFilter
+        }
+      }
     }
 
     if (status && status !== 'all') {

@@ -23,14 +23,29 @@ import {
   Menu,
   X
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { type UserRole } from '@/lib/permissions'
 
 export function Sidebar() {
   const { data: session } = useSession()
   const router = useRouter()
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(true) // Start collapsed
+
+  // Auto-collapse on mobile, expand on desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) { // lg breakpoint
+        setIsCollapsed(true)
+      }
+    }
+
+    // Set initial state based on screen size
+    handleResize()
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   if (!session) return null
 
@@ -65,16 +80,13 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile sidebar toggle */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
-        </Button>
-      </div>
+      {/* Mobile overlay when sidebar is open */}
+      {!isCollapsed && (
+        <div 
+          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
+          onClick={() => setIsCollapsed(true)}
+        />
+      )}
 
       {/* Sidebar */}
       <div
@@ -85,17 +97,43 @@ export function Sidebar() {
       >
         <div className="flex h-full flex-col">
           {/* Logo/Brand */}
-          <div className="flex h-16 items-center justify-center border-b border-gray-200 px-4">
+          <div className={cn(
+            "flex h-16 items-center border-b border-gray-200 px-4",
+            isCollapsed ? "justify-center" : "justify-between"
+          )}>
             {!isCollapsed ? (
-              <div className="flex items-center space-x-3">
+              <>
+                <div className="flex items-center space-x-3">
+                  <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <Building2 className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="font-semibold text-lg text-gray-900">PartnerHub</span>
+                </div>
+                
+                {/* Toggle Button - Expanded State */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              /* Collapsed State - Toggle button overlays the logo */
+              <div className="relative">
                 <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <Building2 className="h-5 w-5 text-white" />
                 </div>
-                <span className="font-semibold text-lg text-gray-900">B2B Commerce</span>
-              </div>
-            ) : (
-              <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-white" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="absolute -top-1 -right-1 h-6 w-6 p-0 hover:bg-gray-100 bg-white shadow-sm border"
+                >
+                  <Menu className="h-3 w-3" />
+                </Button>
               </div>
             )}
           </div>
@@ -189,12 +227,6 @@ export function Sidebar() {
       </div>
 
       {/* Mobile backdrop */}
-      {!isCollapsed && (
-        <div
-          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
-          onClick={() => setIsCollapsed(true)}
-        />
-      )}
     </>
   )
 }

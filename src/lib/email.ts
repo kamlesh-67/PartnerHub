@@ -42,7 +42,7 @@ export async function sendEmail(data: EmailData): Promise<EmailResult> {
     // For now, we'll simulate sending the email
     const result = await simulateEmailSend({
       to: Array.isArray(data.to) ? data.to : [data.to],
-      from: data.from || 'noreply@b2bcommerce.com',
+      from: data.from || 'noreply@partnerhub.com',
       subject: processedSubject,
       html: processedBody
     })
@@ -73,8 +73,8 @@ function processTemplate(template: string, variables: Record<string, unknown>): 
   const systemVariables = {
     currentYear: new Date().getFullYear(),
     currentDate: new Date().toLocaleDateString(),
-    siteName: 'B2B Commerce',
-    supportEmail: 'support@b2bcommerce.com'
+    siteName: 'PartnerHub',
+    supportEmail: 'support@partnerhub.com'
   }
 
   Object.entries(systemVariables).forEach(([key, value]) => {
