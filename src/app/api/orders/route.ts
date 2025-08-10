@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
 
     // Validate stock and calculate totals
     let subtotal = 0
-    const orderItems = []
+    const orderItems: any[] = []
 
     for (const cartItem of cartItems) {
       const product = cartItem.product
@@ -340,7 +340,7 @@ export async function POST(request: NextRequest) {
       resource: 'order',
       resourceId: result.id,
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         orderNumber: result.orderNumber,
@@ -473,7 +473,7 @@ export async function PUT(request: NextRequest) {
       resource: 'order',
       resourceId: orderId,
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         orderNumber: currentOrder.orderNumber,

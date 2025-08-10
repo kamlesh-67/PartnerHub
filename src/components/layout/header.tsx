@@ -102,9 +102,9 @@ export function Header() {
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.label}</span>
-                {item.badge && item.badge > 0 && (
+                {(item as any).badge && (item as any).badge > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
-                    {item.badge}
+                    {(item as any).badge}
                   </Badge>
                 )}
               </Link>

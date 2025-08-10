@@ -159,7 +159,7 @@ export default function CompanyDashboard() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Company Dashboard</h2>
           <p className="text-muted-foreground">
-            Welcome back, {session.user?.name}! Manage your company's B2B operations.
+            Welcome back, {session.user?.name}! Manage your company&apos;s B2B operations.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -167,7 +167,7 @@ export default function CompanyDashboard() {
             {userRole}
           </Badge>
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            {session.user?.company || 'Company Admin'}
+            {typeof session.user?.company === 'string' ? session.user.company : session.user?.company?.name || 'Company Admin'}
           </Badge>
           <Button onClick={() => router.push('/company/settings')}>
             <Settings className="mr-2 h-4 w-4" />

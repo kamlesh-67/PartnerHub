@@ -133,7 +133,7 @@ export default function CompanyUsersPage() {
 
     // For Account Admin, only show users from their company
     if (userRole === 'ACCOUNT_ADMIN') {
-      const userCompanyId = session.user?.companyId
+      const userCompanyId = session?.user?.companyId
       return matchesSearch && matchesRole && user.company?.id === userCompanyId
     }
 

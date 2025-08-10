@@ -48,9 +48,9 @@ interface Product {
 }
 
 interface ProductDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export default function ProductDetailPage({ params }: ProductDetailPageProps) {
@@ -61,6 +61,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const [resolvedParams, setResolvedParams] = useState<{ slug: string } | null>(null)
+
+  // Resolve params
+  useEffect(() => {
+    params.then(p => setResolvedParams(p))
+  }, [params])
 
   // Handle authentication
   useEffect(() => {
@@ -78,7 +84,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       setLoading(true)
       try {
         // Use the specific slug API route
-        const response = await fetch(`/api/products/slug/${params.slug}`)
+        const response = await fetch(`/api/products/slug/${resolvedParams?.slug}`)
         if (response.ok) {
           const data = await response.json()
           setProduct(data.product || null)
@@ -96,10 +102,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       }
     }
 
-    if (session) {
+    if (session && resolvedParams?.slug) {
       fetchProduct()
     }
-  }, [params.slug, session])
+  }, [resolvedParams?.slug, session])
 
   const handleAddToCart = () => {
     if (!product) return
@@ -125,13 +131,13 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
   const handleNextImage = () => {
     if (product?.images && product.images.length > 1) {
-      setSelectedImage((prev) => (prev + 1) % product.images.length)
+      setSelectedImage((prev) => (prev + 1) % (product.images?.length || 1))
     }
   }
 
   const handlePrevImage = () => {
     if (product?.images && product.images.length > 1) {
-      setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length)
+      setSelectedImage((prev) => (prev - 1 + (product.images?.length || 1)) % (product.images?.length || 1))
     }
   }
 
@@ -172,7 +178,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       <div className="container mx-auto py-8 text-center">
         <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
         <h1 className="text-2xl font-bold mb-2">Product Not Found</h1>
-        <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist.</p>
+        <p className="text-muted-foreground mb-6">The product you&apos;re looking for doesn&apos;t exist.</p>
         <Button onClick={() => router.push('/products')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Products

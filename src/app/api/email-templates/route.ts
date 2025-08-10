@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ template, message: 'Email template created successfully' }, { status: 201 })
 
   } catch (error: unknown) {
-    if (error.code === 'P2002') {
+    if ((error as any).code === 'P2002') {
       return NextResponse.json({ error: 'Template name already exists' }, { status: 400 })
     }
     console.error('Error creating email template:', error)

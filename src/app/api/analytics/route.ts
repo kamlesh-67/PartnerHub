@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
     // Get company details for top companies (SUPER_ADMIN only)
     let companyDetails: { id: string; name: string }[] = []
     if (session.user.role === 'SUPER_ADMIN') {
-      const companyIds = topCompanies.map((c: { companyId: string }) => c.companyId).filter(Boolean)
+      const companyIds = topCompanies.map((c: any) => c.companyId).filter(Boolean)
       companyDetails = await prisma.company.findMany({
         where: { id: { in: companyIds } },
         select: { id: true, name: true }
@@ -219,7 +219,7 @@ export async function GET(request: NextRequest) {
 
     // Format top companies (SUPER_ADMIN only)
     const formattedTopCompanies = session.user.role === 'SUPER_ADMIN' 
-      ? topCompanies.map((company: { companyId: string; _count: number; _sum: { total: number } }) => {
+      ? topCompanies.map((company: any) => {
           const details = companyDetails.find(c => c.id === company.companyId)
           return {
             id: company.companyId,

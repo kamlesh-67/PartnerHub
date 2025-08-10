@@ -45,9 +45,9 @@ interface AuditLogEntry {
   ipAddress: string
   userAgent: string
   details: {
-    oldValues?: Record<string, any>
-    newValues?: Record<string, any>
-    metadata?: Record<string, any>
+    oldValues?: Record<string, unknown>
+    newValues?: Record<string, unknown>
+    metadata?: Record<string, unknown>
   }
   severity: 'info' | 'warning' | 'error' | 'critical'
   category: 'authentication' | 'user_management' | 'system' | 'data' | 'security'

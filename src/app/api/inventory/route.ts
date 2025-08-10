@@ -47,19 +47,18 @@ export async function GET(request: NextRequest) {
             }
           }
         },
-        where: lowStock ? {
-          stock: {
-            lte: prisma.raw('min_stock')
-          },
-          status: 'ACTIVE'
-        } : {
+        where: {
           status: 'ACTIVE'
         },
         orderBy: { name: 'asc' }
       })
 
+      const filteredProducts = lowStock 
+        ? products.filter(p => p.stock <= p.minStock)
+        : products
+
       return NextResponse.json({
-        products: products.map(product => ({
+        products: filteredProducts.map(product => ({
           ...product,
           stockStatus: product.stock <= product.minStock ? 'low' : 
                       product.stock <= (product.minStock * 2) ? 'medium' : 'good',
@@ -264,7 +263,7 @@ export async function POST(request: NextRequest) {
       resource: 'inventory',
       resourceId: result.transaction.id,
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         productId,
@@ -395,7 +394,7 @@ export async function PUT(request: NextRequest) {
       resource: 'inventory',
       resourceId: 'bulk_operation',
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         totalUpdates: updates.length,

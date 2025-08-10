@@ -37,7 +37,7 @@ export function SlidingCart({ trigger }: SlidingCartProps) {
     if (quantity <= 0) {
       dispatch(removeFromCart(id))
     } else {
-      dispatch(updateQuantity({ id, quantity }))
+      dispatch(updateQuantity({ productId: id, quantity }))
     }
   }
 

@@ -8,8 +8,9 @@ const prisma = new PrismaClient()
 // GET - Fetch single product by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
   try {
     const session = await getServerSession(authOptions)
     
@@ -18,7 +19,7 @@ export async function GET(
     }
 
     const product = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         category: {
           select: {
@@ -52,8 +53,9 @@ export async function GET(
 // PUT - Update product
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
   try {
     const session = await getServerSession(authOptions)
     
@@ -87,7 +89,7 @@ export async function PUT(
 
     // Check if product exists
     const existingProduct = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
     })
 
     if (!existingProduct) {
@@ -99,7 +101,7 @@ export async function PUT(
       const existingSku = await prisma.product.findFirst({
         where: { 
           sku,
-          id: { not: params.id }
+          id: { not: resolvedParams.id }
         },
       })
 
@@ -128,7 +130,7 @@ export async function PUT(
         const existingSlug = await prisma.product.findFirst({
           where: { 
             slug: uniqueSlug,
-            id: { not: params.id }
+            id: { not: resolvedParams.id }
           }
         })
         if (!existingSlug) break
@@ -140,7 +142,7 @@ export async function PUT(
 
     // Update product
     const updatedProduct = await prisma.product.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: {
         name: name || existingProduct.name,
         slug,
@@ -188,8 +190,9 @@ export async function PUT(
 // DELETE - Delete product
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
   try {
     const session = await getServerSession(authOptions)
     
@@ -204,7 +207,7 @@ export async function DELETE(
 
     // Check if product exists
     const existingProduct = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
     })
 
     if (!existingProduct) {
@@ -213,14 +216,14 @@ export async function DELETE(
 
     // Check if product is used in any cart items or order items
     const [cartItems, orderItems] = await Promise.all([
-      prisma.cartItem.count({ where: { productId: params.id } }),
-      prisma.orderItem.count({ where: { productId: params.id } }),
+      prisma.cartItem.count({ where: { productId: resolvedParams.id } }),
+      prisma.orderItem.count({ where: { productId: resolvedParams.id } }),
     ])
 
     if (cartItems > 0 || orderItems > 0) {
       // Instead of deleting, set status to INACTIVE
       await prisma.product.update({
-        where: { id: params.id },
+        where: { id: resolvedParams.id },
         data: { status: 'INACTIVE' },
       })
 
@@ -232,7 +235,7 @@ export async function DELETE(
 
     // Safe to delete
     await prisma.product.delete({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
     })
 
     return NextResponse.json({ message: 'Product deleted successfully' })

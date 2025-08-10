@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
           }
         }
         results.total = productsCount
-        results.results = results.products.items
+        results.results = (results.products as any).items
       } else {
         results.products = products.slice(0, 5).map(product => ({
           ...product,
@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
           }
         }
         results.total = ordersCount
-        results.results = results.orders.items
+        results.results = (results.orders as any).items
       } else {
         results.orders = orders.slice(0, 5).map(order => ({
           ...order,
@@ -255,7 +255,7 @@ export async function GET(request: NextRequest) {
           }
         }
         results.total = usersCount
-        results.results = results.users.items
+        results.results = (results.users as any).items
       } else {
         results.users = sanitizedUsers.slice(0, 5).map(user => ({
           ...user,
@@ -308,7 +308,7 @@ export async function GET(request: NextRequest) {
           }
         }
         results.total = companiesCount
-        results.results = results.companies.items
+        results.results = (results.companies as any).items
       } else {
         results.companies = companies.slice(0, 5).map(company => ({
           ...company,
@@ -321,11 +321,11 @@ export async function GET(request: NextRequest) {
     // For 'all' type, combine and sort by relevance
     if (type === 'all') {
       const allResults = [
-        ...(results.products || []),
-        ...(results.orders || []),
-        ...(results.users || []),
-        ...(results.companies || [])
-      ].sort((a, b) => (b.relevance || 0) - (a.relevance || 0))
+        ...(Array.isArray(results.products) ? results.products : []),
+        ...(Array.isArray(results.orders) ? results.orders : []),
+        ...(Array.isArray(results.users) ? results.users : []),
+        ...(Array.isArray(results.companies) ? results.companies : [])
+      ].sort((a: any, b: any) => (b.relevance || 0) - (a.relevance || 0))
 
       results.results = allResults.slice(skip, skip + limit)
       results.total = allResults.length

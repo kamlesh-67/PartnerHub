@@ -8,8 +8,9 @@ const prisma = new PrismaClient()
 // GET - Fetch single product by slug
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const resolvedParams = await params
   try {
     const session = await getServerSession(authOptions)
     
@@ -19,7 +20,7 @@ export async function GET(
 
     const product = await prisma.product.findFirst({
       where: { 
-        slug: params.slug,
+        slug: resolvedParams.slug,
         status: 'ACTIVE' // Only show active products to regular users
       },
       include: {

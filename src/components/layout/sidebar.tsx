@@ -37,7 +37,7 @@ export function Sidebar() {
   const userRole = session.user?.role as UserRole
   const userName = session.user?.name || 'User'
   const userEmail = session.user?.email || ''
-  const userCompany = session.user?.company || 'No Company'
+  const userCompany = session.user?.company?.name || 'No Company'
 
   const handleSignOut = async () => {
     await signOut({ redirect: false })

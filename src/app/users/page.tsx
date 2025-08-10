@@ -129,7 +129,7 @@ export default function UsersPage() {
 
         // Filter by company if user is ACCOUNT_ADMIN
         if (session?.user.role === 'ACCOUNT_ADMIN') {
-          filteredUsers = mockUsers.filter(user => user.company.name === session.user.company)
+          filteredUsers = mockUsers.filter(user => user.company.name === (typeof session.user.company === 'string' ? session.user.company : session.user.company?.name))
         }
 
         setUsers(filteredUsers)

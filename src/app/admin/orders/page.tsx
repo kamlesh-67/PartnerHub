@@ -171,7 +171,7 @@ export default function AdminOrdersPage() {
 
     // For Account Admin, only show orders from their company
     if (userRole === 'ACCOUNT_ADMIN') {
-      const userCompanyId = session.user?.companyId
+      const userCompanyId = session?.user?.companyId
       return matchesSearch && matchesStatus && order.company?.id === userCompanyId
     }
 

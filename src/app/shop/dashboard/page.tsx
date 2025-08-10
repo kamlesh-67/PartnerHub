@@ -156,7 +156,7 @@ export default function BuyerDashboard() {
             {userRole}
           </Badge>
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            {session.user?.company || 'Individual Buyer'}
+            {typeof session.user?.company === 'string' ? session.user.company : session.user?.company?.name || 'Individual Buyer'}
           </Badge>
           <Button onClick={() => router.push('/cart')}>
             <ShoppingCart className="mr-2 h-4 w-4" />

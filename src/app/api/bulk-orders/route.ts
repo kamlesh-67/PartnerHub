@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
           requestedBy: {
             userId: session.user.id,
             userName: session.user.name,
-            userEmail: session.user.email,
+            userEmail: session.user.email || 'unknown@example.com',
             companyId: session.user.companyId
           },
           items: processedItems,
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
       resource: 'bulk_order',
       resourceId: bulkOrder.id,
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         bulkOrderNumber,
@@ -308,16 +308,16 @@ export async function PUT(request: NextRequest) {
     })
 
     // Notify requester about status change
-    if (metadata.requestedBy?.userId) {
+    if ((metadata as any).requestedBy?.userId) {
       await prisma.notification.create({
         data: {
-          title: `Bulk Order ${status.toUpperCase()} - ${metadata.bulkOrderNumber}`,
+          title: `Bulk Order ${status.toUpperCase()} - ${(metadata as any).bulkOrderNumber}`,
           message: `Your bulk order request has been ${status}. ${adminNotes || ''}`,
           type: status === 'approved' ? 'success' : status === 'rejected' ? 'error' : 'info',
-          userId: metadata.requestedBy.userId,
+          userId: (metadata as any).requestedBy.userId,
           metadata: {
             bulkOrderId: updatedBulkOrder.id,
-            originalBulkOrderNumber: metadata.bulkOrderNumber,
+            originalBulkOrderNumber: (metadata as any).bulkOrderNumber,
             status
           }
         }
@@ -341,14 +341,14 @@ export async function PUT(request: NextRequest) {
       resource: 'bulk_order',
       resourceId: bulkOrderId,
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         bulkOrderNumber: metadata.bulkOrderNumber,
         oldStatus: metadata.status,
         newStatus: status,
         adminNotes,
-        requestedBy: metadata.requestedBy?.userName
+        requestedBy: (metadata as any).requestedBy?.userName
       },
       category: 'data',
       severity: 'info',

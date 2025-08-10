@@ -48,14 +48,20 @@ export async function GET(request: NextRequest) {
       prisma.notification.count({ where }),
       prisma.notification.count({
         where: {
-          OR: [
-            { userId: session.user.id },
-            { isGlobal: true }
-          ],
-          isRead: false,
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } }
+          AND: [
+            {
+              OR: [
+                { userId: session.user.id },
+                { isGlobal: true }
+              ]
+            },
+            { isRead: false },
+            {
+              OR: [
+                { expiresAt: null },
+                { expiresAt: { gt: new Date() } }
+              ]
+            }
           ]
         }
       })
@@ -209,7 +215,7 @@ export async function DELETE(request: NextRequest) {
       ]
     }
 
-    await prisma.notification.delete({ where })
+    await prisma.notification.delete({ where: { id: (where as any).id } })
 
     return NextResponse.json({ message: 'Notification deleted' })
 

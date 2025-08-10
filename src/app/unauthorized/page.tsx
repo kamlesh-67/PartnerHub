@@ -71,7 +71,7 @@ export default function UnauthorizedPage() {
               Access Denied
             </CardTitle>
             <CardDescription className="text-gray-600">
-              You don't have permission to access the requested page
+              You don&apos;t have permission to access the requested page
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -100,7 +100,7 @@ export default function UnauthorizedPage() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-blue-700">Company:</span>
                           <span className="text-sm text-blue-800 font-medium">
-                            {session.user.company}
+                            {typeof session.user.company === 'string' ? session.user.company : session.user.company?.name || 'N/A'}
                           </span>
                         </div>
                       )}

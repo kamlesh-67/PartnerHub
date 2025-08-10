@@ -83,8 +83,8 @@ export default function Home() {
                 </Badge>
               </div>
               <Button asChild size="lg">
-                <Link href={getRoleDashboard(session.user.role)}>
-                  Go to Dashboard
+                <Link href="/products">
+                  Browse Products
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -135,75 +135,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Tech Stack Section */}
-      <section className="py-20 px-4 bg-muted/50">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Modern Tech Stack
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Built with cutting-edge technologies for performance and scalability
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  Frontend
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li>• Next.js 15 with App Router</li>
-                  <li>• Tailwind CSS v4</li>
-                  <li>• shadcn/ui Components</li>
-                  <li>• Lucide Icons</li>
-                  <li>• Redux Toolkit</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  Backend
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li>• NextAuth.js</li>
-                  <li>• Prisma ORM</li>
-                  <li>• SQLite Database</li>
-                  <li>• JWT Tokens</li>
-                  <li>• API Routes</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  Features
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li>• Role-based Access Control</li>
-                  <li>• Multi-company Support</li>
-                  <li>• Shopping Cart & Orders</li>
-                  <li>• Product Management</li>
-                  <li>• User Management</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
     </div>
   )
 }

@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         paymentToken,
         paymentMethod,
         orderId: order.orderNumber,
-        customerEmail: session.user.email
+        customerEmail: session.user.email || 'unknown@example.com'
       })
     } catch (paymentError: any) {
       // Create failed payment record
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
       resource: 'payment',
       resourceId: paymentRecord.id,
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         orderId,
@@ -291,7 +291,7 @@ export async function PUT(request: NextRequest) {
       resource: 'payment',
       resourceId: paymentId,
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         oldStatus: 'pending',

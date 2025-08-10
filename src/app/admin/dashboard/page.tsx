@@ -48,8 +48,22 @@ export default function AdminDashboard() {
       return
     }
 
-    if (!canAccessPage(userRole, '/admin/dashboard')) {
-      router.push('/unauthorized')
+    // Only SUPER_ADMIN can access admin dashboard
+    if (userRole !== 'SUPER_ADMIN') {
+      // Redirect to appropriate dashboard based on role
+      switch (userRole) {
+        case 'ACCOUNT_ADMIN':
+          router.push('/company/dashboard')
+          break
+        case 'BUYER':
+          router.push('/shop/dashboard')
+          break
+        case 'OPERATION':
+          router.push('/operations/dashboard')
+          break
+        default:
+          router.push('/unauthorized')
+      }
       return
     }
 
@@ -78,7 +92,7 @@ export default function AdminDashboard() {
     )
   }
 
-  if (!session || !canAccessPage(userRole, '/admin/dashboard')) {
+  if (!session || userRole !== 'SUPER_ADMIN') {
     return null
   }
 
@@ -159,7 +173,7 @@ export default function AdminDashboard() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Super Admin Dashboard</h2>
           <p className="text-muted-foreground">
-            Welcome back, {session.user?.name}! Here's what's happening with your B2B platform.
+            Welcome back, {session.user?.name}! Here&apos;s what&apos;s happening with your B2B platform.
           </p>
         </div>
         <div className="flex items-center space-x-2">

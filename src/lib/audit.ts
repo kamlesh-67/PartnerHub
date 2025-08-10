@@ -26,7 +26,7 @@ export async function createAuditLog(data: AuditLogData) {
         userId: data.userId,
         userEmail: data.userEmail,
         userName: data.userName,
-        details: data.details,
+        details: data.details as any,
         severity: data.severity || 'info',
         category: data.category || 'system',
         ipAddress: data.ipAddress,

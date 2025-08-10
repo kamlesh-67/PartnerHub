@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       resource: 'system_setting',
       resourceId: setting.id,
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         key,
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
 
   } catch (error: unknown) {
-    if (error.code === 'P2002') {
+    if ((error as any).code === 'P2002') {
       return NextResponse.json({ error: 'Setting key already exists' }, { status: 400 })
     }
     console.error('Error creating setting:', error)
@@ -161,7 +161,7 @@ export async function PUT(request: NextRequest) {
 
     // Find existing setting
     const existingSetting = await prisma.systemSetting.findFirst({
-      where: settingId ? { id: settingId } : { key }
+      where: settingId ? { id: settingId } : { key: key! }
     })
 
     if (!existingSetting) {
@@ -195,7 +195,7 @@ export async function PUT(request: NextRequest) {
       resource: 'system_setting',
       resourceId: setting.id,
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         oldValues: {
@@ -247,7 +247,7 @@ export async function DELETE(request: NextRequest) {
 
     // Find and delete setting
     const setting = await prisma.systemSetting.findFirst({
-      where: settingId ? { id: settingId } : { key }
+      where: settingId ? { id: settingId } : { key: key! }
     })
 
     if (!setting) {
@@ -265,7 +265,7 @@ export async function DELETE(request: NextRequest) {
       resource: 'system_setting',
       resourceId: setting.id,
       userId: session.user.id,
-      userEmail: session.user.email,
+      userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
       details: {
         deletedSetting: {

@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
         resource,
         resourceId,
         userId: session.user.id,
-        userEmail: session.user.email,
+        userEmail: session.user.email || 'unknown@example.com',
         userName: session.user.name || 'Unknown User',
         details,
         severity,

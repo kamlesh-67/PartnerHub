@@ -312,7 +312,7 @@ export default function OperationsDashboard() {
       {/* Today's Priority Tasks */}
       <Card>
         <CardHeader>
-          <CardTitle>Today's Priority Tasks</CardTitle>
+          <CardTitle>Today&apos;s Priority Tasks</CardTitle>
           <CardDescription>
             High-priority operations requiring attention
           </CardDescription>
