@@ -7,10 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { 
-  BarChart3, 
+import {
+  BarChart3,
   TrendingUp,
-  TrendingDown,
   Users,
   Package,
   ShoppingCart,
@@ -91,7 +90,7 @@ export default function AdminAnalyticsPage() {
   // Handle authentication
   useEffect(() => {
     if (status === 'loading') return
-    
+
     if (!session) {
       router.push('/auth/signin')
       return
@@ -187,7 +186,7 @@ export default function AdminAnalyticsPage() {
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-48">
@@ -202,12 +201,12 @@ export default function AdminAnalyticsPage() {
               ))}
             </SelectContent>
           </Select>
-          
+
           <Button variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          
+
           <Button>
             <Download className="h-4 w-4 mr-2" />
             Export

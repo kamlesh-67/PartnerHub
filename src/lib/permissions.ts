@@ -244,11 +244,6 @@ export function hasPermission(userRole: UserRole, permission: keyof RolePermissi
 export function getUserPermissions(userRole: UserRole): RolePermissions {
   return ROLE_PERMISSIONS[userRole]
 }
-function getUserRole(): UserRole { // ✅ Return UserRole, not string
-  // your logic
-  return 'SUPER_ADMIN'; // must be one of the UserRole literals
-}
-
 export function canAccessPage(userRole: UserRole, page: string): boolean {
   const permissions = getUserPermissions(userRole)
 
@@ -290,9 +285,7 @@ export function canAccessPage(userRole: UserRole, page: string): boolean {
     case '/operations/shipping':
     case '/operations/quality':
     case '/operations/reports':
-      const userRole1: UserRole = getUserRole();
-      const isPrivileged1 = userRole1 === 'OPERATION' || userRole1 === 'SUPER_ADMIN';
-      return isPrivileged1
+      return userRole === 'OPERATION'
 
     // Company pages
     case '/company':
@@ -302,10 +295,7 @@ export function canAccessPage(userRole: UserRole, page: string): boolean {
     case '/company/products':
     case '/company/orders':
     case '/company/reports':
-      const userRole2: UserRole = getUserRole();
-      const isPrivileged2 = userRole2 === 'ACCOUNT_ADMIN' || userRole2 === 'SUPER_ADMIN'
-      return isPrivileged2
-      //return userRole === 'ACCOUNT_ADMIN' || userRole === 'SUPER_ADMIN'
+      return userRole === 'ACCOUNT_ADMIN'
 
     // Shopping pages
     case '/products':
@@ -318,15 +308,9 @@ export function canAccessPage(userRole: UserRole, page: string): boolean {
     case '/bulk-orders':
       return permissions.canCreateBulkOrders
     case '/wishlist':
-      const userRole3: UserRole = getUserRole();
-      const isPrivileged3 = userRole3 === 'BUYER' || userRole3 === 'ACCOUNT_ADMIN' || userRole3 === 'SUPER_ADMIN'
-      return isPrivileged3
-//      return userRole === 'BUYER' || userRole === 'ACCOUNT_ADMIN' || userRole === 'SUPER_ADMIN'
+      return userRole === 'BUYER' || userRole === 'ACCOUNT_ADMIN'
     case '/shop/dashboard':
-      const userRole4: UserRole = getUserRole();
-      const isPrivileged4 = userRole4 === 'BUYER' || userRole4 === 'SUPER_ADMIN';
-      return isPrivileged4
-      // return userRole === 'BUYER' || userRole === 'SUPER_ADMIN'
+      return userRole === 'BUYER'
 
     default:
       return true // Default allow for unknown pages
