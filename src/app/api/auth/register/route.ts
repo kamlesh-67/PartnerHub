@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { z } from 'zod'
+import { logError } from '@/lib/security'
 
-const prisma = new PrismaClient()
+
 
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   name: z.string().min(2),
-  role: z.enum(['SUPER_ADMIN', 'ACCOUNT_ADMIN', 'BUYER', 'OPERATION']).optional(),
   companyName: z.string().optional(),
   companyEmail: z.string().email().optional(),
 })
@@ -46,13 +46,13 @@ export async function POST(request: NextRequest) {
       companyId = company.id
     }
 
-    // Create user
+    // Create user - hardcode role to BUYER for public registration
     const user = await prisma.user.create({
       data: {
         email: validatedData.email,
         password: hashedPassword,
         name: validatedData.name,
-        role: validatedData.role || 'BUYER',
+        role: 'BUYER', // Strictly hardcode for public registration
         companyId,
       },
       include: {
@@ -69,17 +69,16 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Registration error:', error)
-    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.issues },
+        { error: 'Invalid input data' },
         { status: 400 }
       )
     }
 
+    logError('auth.register', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Something went wrong. Please try again.' },
       { status: 500 }
     )
   }

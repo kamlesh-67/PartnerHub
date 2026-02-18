@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { createAuditLog, getClientInfo } from '@/lib/audit'
 
-const prisma = new PrismaClient()
+
 
 // GET - Fetch system settings
 export async function GET(request: NextRequest) {
@@ -55,8 +55,6 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Error fetching settings:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -134,8 +132,6 @@ export async function POST(request: NextRequest) {
     }
     console.error('Error creating setting:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -223,8 +219,6 @@ export async function PUT(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Error updating setting:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -285,8 +279,6 @@ export async function DELETE(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Error deleting setting:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 

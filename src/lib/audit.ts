@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/lib/prisma'
 
 interface AuditLogData {
   action: string
@@ -36,10 +34,10 @@ export async function createAuditLog(data: AuditLogData) {
 
     return auditLog
   } catch (error) {
-    console.error('Error creating audit log:', error)
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error creating audit log:', error)
+    }
     throw error
-  } finally {
-    await prisma.$disconnect()
   }
 }
 

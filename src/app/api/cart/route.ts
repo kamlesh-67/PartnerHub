@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 
-const prisma = new PrismaClient()
+
 
 // GET - Fetch user's cart
 export async function GET(request: NextRequest) {
@@ -86,8 +86,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching cart:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -211,8 +209,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error adding to cart:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -296,8 +292,6 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error updating cart item:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -348,7 +342,5 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error('Error removing from cart:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }

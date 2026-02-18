@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/lib/prisma'
 
 interface EmailData {
   to: string | string[]
@@ -50,13 +48,13 @@ export async function sendEmail(data: EmailData): Promise<EmailResult> {
     return result
 
   } catch (error) {
-    console.error('Error sending email:', error)
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error sending email:', error)
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'
     }
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -100,12 +98,14 @@ async function simulateEmailSend(emailData: {
 
   if (success) {
     const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    console.log(`📧 Email sent successfully:`, {
-      ...emailData,
-      messageId,
-      timestamp: new Date().toISOString()
-    })
-    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`📧 Email sent successfully:`, {
+        ...emailData,
+        messageId,
+        timestamp: new Date().toISOString()
+      })
+    }
+
     return {
       success: true,
       messageId

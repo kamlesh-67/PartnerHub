@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { ImageUpload } from '@/components/ui/image-upload'
-import { 
+import {
   Package,
   ArrowLeft,
   Save,
@@ -48,6 +48,7 @@ interface ProductFormData {
   images: string[]
   tags: string[]
   categoryId: string
+  companyId: string // Added companyId
 }
 
 export default function AddProductPage() {
@@ -77,13 +78,14 @@ export default function AddProductPage() {
     },
     images: [],
     tags: [],
-    categoryId: ''
+    categoryId: '',
+    companyId: '' // Added companyId
   })
 
   // Handle authentication
   useEffect(() => {
     if (status === 'loading') return
-    
+
     if (!session) {
       router.push('/auth/signin')
       return
@@ -120,7 +122,7 @@ export default function AddProductPage() {
       ...prev,
       [field]: value
     }))
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
@@ -201,7 +203,7 @@ export default function AddProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
@@ -329,6 +331,70 @@ export default function AddProductPage() {
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>Pricing</CardTitle>
+                <CardDescription>
+                  Set your product pricing
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Regular Price *</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.price}
+                      onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
+                      placeholder="0.00"
+                      className={errors.price ? 'border-red-500' : ''}
+                    />
+                    {errors.price && (
+                      <p className="text-sm text-red-600 flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        {errors.price}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="comparePrice">Compare Price</Label>
+                    <Input
+                      id="comparePrice"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.comparePrice}
+                      onChange={(e) => handleInputChange('comparePrice', parseFloat(e.target.value) || 0)}
+                      placeholder="0.00"
+                      className={errors.comparePrice ? 'border-red-500' : ''}
+                    />
+                    {errors.comparePrice && (
+                      <p className="text-sm text-red-600 flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        {errors.comparePrice}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="costPrice">Cost Price</Label>
+                    <Input
+                      id="costPrice"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.costPrice}
+                      onChange={(e) => handleInputChange('costPrice', parseFloat(e.target.value) || 0)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
@@ -521,7 +587,7 @@ export default function AddProductPage() {
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                
+
                 {formData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {formData.tags.map((tag, index) => (

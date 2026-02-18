@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { createAuditLog, getClientInfo } from '@/lib/audit'
 import { sendLowStockAlert } from '@/lib/email'
 
-const prisma = new PrismaClient()
+
 
 // GET - Fetch inventory transactions and stock levels
 export async function GET(request: NextRequest) {
@@ -127,8 +127,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching inventory data:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -294,8 +292,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating inventory transaction:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -421,7 +417,5 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error performing bulk inventory update:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }

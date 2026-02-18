@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { createAuditLog, getClientInfo } from '@/lib/audit'
+import { logError } from '@/lib/security'
 
-const prisma = new PrismaClient()
+
 
 // GET - Fetch payment records
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20')
 
     const where: Record<string, unknown> = {}
-    
+
     // Filter by user's orders unless admin
     if (session.user.role !== 'SUPER_ADMIN') {
       where.order = {
@@ -80,10 +81,8 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error fetching payment records:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
+    logError('payment.fetch', error)
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }
 
@@ -91,7 +90,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -208,10 +207,8 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Error processing payment:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
+    logError('payment.process', error)
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }
 
@@ -242,7 +239,7 @@ async function processPayment(paymentData: Record<string, unknown>) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -262,11 +259,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const updateData: Record<string, unknown> = { status }
-    
+
     if (status === 'failed' && failureReason) {
       updateData.failureReason = failureReason
     }
-    
+
     if (status === 'refunded' && refundedAt) {
       updateData.refundedAt = new Date(refundedAt)
     }
@@ -307,9 +304,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ paymentRecord })
 
   } catch (error) {
-    console.error('Error updating payment:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
+    logError('payment.update', error)
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

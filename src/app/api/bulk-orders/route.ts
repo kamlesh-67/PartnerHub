@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { createAuditLog, getClientInfo } from '@/lib/audit'
 
-const prisma = new PrismaClient()
+
 
 interface BulkOrderItem {
   productId: string
@@ -72,8 +72,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching bulk orders:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -243,8 +241,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating bulk order:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -366,7 +362,5 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error updating bulk order:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }

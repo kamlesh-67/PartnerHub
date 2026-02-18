@@ -7,6 +7,7 @@ import { hasPermission, canAccessPage, type UserRole, type RolePermissions } fro
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Shield, AlertCircle, Home } from 'lucide-react'
+import { validateRedirectUrl } from '@/lib/security'
 
 interface PermissionGuardProps {
   children: ReactNode
@@ -42,7 +43,7 @@ export function PermissionGuard({
     // Check role-based access
     if (roles && !roles.includes(userRole)) {
       if (redirectTo) {
-        router.push(redirectTo)
+        router.push(validateRedirectUrl(redirectTo))
         return
       }
     }
@@ -50,7 +51,7 @@ export function PermissionGuard({
     // Check page access
     if (page && !canAccessPage(userRole, page)) {
       if (redirectTo) {
-        router.push(redirectTo)
+        router.push(validateRedirectUrl(redirectTo))
         return
       }
     }
@@ -58,7 +59,7 @@ export function PermissionGuard({
     // Check specific permission
     if (permission && !hasPermission(userRole, permission)) {
       if (redirectTo) {
-        router.push(redirectTo)
+        router.push(validateRedirectUrl(redirectTo))
         return
       }
     }
@@ -81,9 +82,9 @@ export function PermissionGuard({
   // Check role-based access
   if (roles && !roles.includes(userRole)) {
     if (!showFallback) return null
-    
+
     return fallback || (
-      <UnauthorizedFallback 
+      <UnauthorizedFallback
         message={`This page requires ${roles.join(' or ')} role`}
         userRole={userRole}
       />
@@ -93,9 +94,9 @@ export function PermissionGuard({
   // Check page access
   if (page && !canAccessPage(userRole, page)) {
     if (!showFallback) return null
-    
+
     return fallback || (
-      <UnauthorizedFallback 
+      <UnauthorizedFallback
         message="You don't have permission to access this page"
         userRole={userRole}
       />
@@ -105,9 +106,9 @@ export function PermissionGuard({
   // Check specific permission
   if (permission && !hasPermission(userRole, permission)) {
     if (!showFallback) return null
-    
+
     return fallback || (
-      <UnauthorizedFallback 
+      <UnauthorizedFallback
         message={`This action requires '${permission}' permission`}
         userRole={userRole}
       />
@@ -118,10 +119,10 @@ export function PermissionGuard({
   return <>{children}</>
 }
 
-function UnauthorizedFallback({ 
-  message, 
-  userRole 
-}: { 
+function UnauthorizedFallback({
+  message,
+  userRole
+}: {
   message: string
   userRole: UserRole
 }) {
@@ -170,16 +171,16 @@ function UnauthorizedFallback({
               </div>
             </div>
           </div>
-          
+
           <div className="flex space-x-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex-1"
               onClick={() => router.back()}
             >
               Go Back
             </Button>
-            <Button 
+            <Button
               className="flex-1"
               onClick={() => router.push(getDashboardPath(userRole))}
             >
@@ -251,12 +252,12 @@ interface ConditionalRenderProps {
   hideFor?: UserRole[]
 }
 
-export function ConditionalRender({ 
-  children, 
-  permission, 
-  roles, 
+export function ConditionalRender({
+  children,
+  permission,
+  roles,
   showOnlyFor,
-  hideFor 
+  hideFor
 }: ConditionalRenderProps) {
   const { data: session } = useSession()
   const userRole = session?.user?.role as UserRole

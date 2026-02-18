@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -37,7 +37,7 @@ enum ProductStatus {
 
 // User model for authentication and authorization
 model User {
-  id            String    @id @default(cuid()) @map("_id")
+  id            String    @id @default(cuid())
   email         String    @unique
   name          String?
   password      String
@@ -68,7 +68,7 @@ model User {
 
 // NextAuth Account model
 model Account {
-  id                String  @id @default(cuid()) @map("_id")
+  id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
@@ -89,7 +89,7 @@ model Account {
 
 // NextAuth Session model
 model Session {
-  id           String   @id @default(cuid()) @map("_id")
+  id           String   @id @default(cuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -100,7 +100,6 @@ model Session {
 
 // NextAuth Verification Token model
 model VerificationToken {
-  id         String   @id @default(cuid()) @map("_id")
   identifier String
   token      String   @unique
   expires    DateTime
@@ -111,7 +110,7 @@ model VerificationToken {
 
 // Company model for B2B accounts
 model Company {
-  id          String   @id @default(cuid()) @map("_id")
+  id          String   @id @default(cuid())
   name        String
   email       String   @unique
   phone       String?
@@ -133,7 +132,7 @@ model Company {
 
 // Address model for shipping and billing
 model Address {
-  id         String   @id @default(cuid()) @map("_id")
+  id         String   @id @default(cuid())
   street     String
   city       String
   state      String
@@ -157,13 +156,13 @@ model Address {
 
 // Category model for product organization
 model Category {
-  id          String    @id @default(cuid()) @map("_id")
+  id          String    @id @default(cuid())
   name        String
   slug        String    @unique
   description String?
   image       String?
   parentId    String?
-  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
@@ -177,7 +176,7 @@ model Category {
 
 // Product model
 model Product {
-  id          String        @id @default(cuid()) @map("_id")
+  id          String        @id @default(cuid())
   name        String
   slug        String        @unique
   description String?
@@ -194,7 +193,7 @@ model Product {
   images      String?       // JSON array of image URLs
   tags        String?       // JSON array of tags
   categoryId  String
-  category    Category      @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  category    Category      @relation(fields: [categoryId], references: [id])
   companyId   String?       // Company that owns this product (null for super admin products)
   company     Company?      @relation(fields: [companyId], references: [id])
   createdAt   DateTime      @default(now())
@@ -210,7 +209,7 @@ model Product {
 
 // Shopping cart model
 model CartItem {
-  id        String   @id @default(cuid()) @map("_id")
+  id        String   @id @default(cuid())
   quantity  Int
   userId    String
   productId String
@@ -219,7 +218,7 @@ model CartItem {
   
   // Relations
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   
   @@unique([userId, productId])
   @@map("cart_items")
@@ -227,7 +226,7 @@ model CartItem {
 
 // Order model
 model Order {
-  id              String      @id @default(cuid()) @map("_id")
+  id              String      @id @default(cuid())
   orderNumber     String      @unique
   status          OrderStatus @default(PENDING)
   subtotal        Float
@@ -256,7 +255,7 @@ model Order {
 
 // Order items model
 model OrderItem {
-  id        String  @id @default(cuid()) @map("_id")
+  id        String  @id @default(cuid())
   quantity  Int
   price     Float   // Price at time of order
   orderId   String
@@ -264,14 +263,14 @@ model OrderItem {
   
   // Relations
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product   Product @relation(fields: [productId], references: [id])
   
   @@map("order_items")
 }
 
 // Audit Log model for tracking system activities
 model AuditLog {
-  id            String   @id @default(cuid()) @map("_id")
+  id            String   @id @default(cuid())
   timestamp     DateTime @default(now())
   action        String
   resource      String
@@ -298,7 +297,7 @@ model AuditLog {
 
 // Analytics data aggregation table
 model AnalyticsMetric {
-  id          String   @id @default(cuid()) @map("_id")
+  id          String   @id @default(cuid())
   metricName  String   // revenue, orders, users, products
   metricValue Float
   period      String   // daily, weekly, monthly
@@ -315,7 +314,7 @@ model AnalyticsMetric {
 
 // Notification system
 model Notification {
-  id        String   @id @default(cuid()) @map("_id")
+  id        String   @id @default(cuid())
   title     String
   message   String
   type      String   @default("info") // info, success, warning, error
@@ -338,7 +337,7 @@ model Notification {
 
 // System Settings
 model SystemSetting {
-  id        String   @id @default(cuid()) @map("_id")
+  id        String   @id @default(cuid())
   key       String   @unique
   value     String
   type      String   @default("string") // string, number, boolean, json
@@ -353,7 +352,7 @@ model SystemSetting {
 
 // Email Templates for notifications
 model EmailTemplate {
-  id        String   @id @default(cuid()) @map("_id")
+  id        String   @id @default(cuid())
   name      String   @unique
   subject   String
   body      String   // HTML template
@@ -367,7 +366,7 @@ model EmailTemplate {
 
 // Payment Records
 model PaymentRecord {
-  id            String   @id @default(cuid()) @map("_id")
+  id            String   @id @default(cuid())
   orderId       String
   order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   amount        Float
@@ -390,9 +389,9 @@ model PaymentRecord {
 
 // Inventory tracking
 model InventoryTransaction {
-  id        String   @id @default(cuid()) @map("_id")
+  id        String   @id @default(cuid())
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   type      String   // in, out, adjustment
   quantity  Int
   reason    String?  // purchase, sale, damage, adjustment
@@ -409,7 +408,7 @@ model InventoryTransaction {
 
 // File uploads management
 model FileUpload {
-  id          String   @id @default(cuid()) @map("_id")
+  id          String   @id @default(cuid())
   filename    String
   originalName String
   mimeType    String

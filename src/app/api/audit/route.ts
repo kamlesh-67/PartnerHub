@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 
-const prisma = new PrismaClient()
+
 
 // GET - Fetch audit logs
 export async function GET(request: NextRequest) {
@@ -105,8 +105,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching audit logs:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -152,7 +150,5 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating audit log:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }

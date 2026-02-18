@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 
-const prisma = new PrismaClient()
+
 
 // GET - Generate and export reports
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -72,8 +72,8 @@ export async function GET(request: NextRequest) {
 
     if (format === 'xlsx') {
       // In a real implementation, you'd use a library like xlsx to generate Excel files
-      return NextResponse.json({ 
-        error: 'XLSX format not yet implemented. Please use CSV or JSON.' 
+      return NextResponse.json({
+        error: 'XLSX format not yet implemented. Please use CSV or JSON.'
       }, { status: 400 })
     }
 
@@ -91,14 +91,12 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error generating report:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
 // Sales Report
 async function generateSalesReport(startDate: Date, endDate: Date, session: Record<string, any>, companyId?: string | null) {
-  const where: Record<string, unknown> = {
+  const where: any = {
     createdAt: { gte: startDate, lte: endDate },
     status: { not: 'CANCELLED' }
   }
@@ -110,72 +108,77 @@ async function generateSalesReport(startDate: Date, endDate: Date, session: Reco
     where.companyId = session.user.companyId
   }
 
-  const [orders, ordersByDay, ordersByCompany, topProducts] = await Promise.all([
-    // Total orders
-    prisma.order.findMany({
-      where,
-      include: {
-        user: { select: { name: true, email: true } },
-        company: { select: { name: true } },
-        orderItems: {
-          include: {
-            product: { select: { name: true, sku: true } }
-          }
+  // Fetch all orders in the range for processing
+  const orders = await prisma.order.findMany({
+    where,
+    include: {
+      user: { select: { name: true, email: true } },
+      company: { select: { name: true } },
+      orderItems: {
+        include: {
+          product: { select: { name: true, sku: true } }
         }
       }
-    }),
-    
-    // Daily sales
-    prisma.$queryRaw`
-      SELECT DATE(created_at) as date, 
-             COUNT(*) as orders_count,
-             SUM(total) as total_revenue,
-             AVG(total) as avg_order_value
-      FROM orders 
-      WHERE created_at >= ${startDate} 
-        AND created_at <= ${endDate}
-        AND status != 'CANCELLED'
-        ${companyId ? `AND company_id = '${companyId}'` : ''}
-        ${session.user.role === 'ACCOUNT_ADMIN' ? `AND company_id = '${session.user.companyId}'` : ''}
-      GROUP BY DATE(created_at)
-      ORDER BY date ASC
-    `,
+    }
+  })
 
-    // Sales by company (only for super admin)
-    session.user.role === 'SUPER_ADMIN' ? prisma.$queryRaw`
-      SELECT c.name as company_name,
-             COUNT(o.id) as orders_count,
-             SUM(o.total) as total_revenue,
-             AVG(o.total) as avg_order_value
-      FROM orders o
-      JOIN companies c ON o.company_id = c.id
-      WHERE o.created_at >= ${startDate} 
-        AND o.created_at <= ${endDate}
-        AND o.status != 'CANCELLED'
-        ${companyId ? `AND o.company_id = '${companyId}'` : ''}
-      GROUP BY c.id, c.name
-      ORDER BY total_revenue DESC
-    ` : [],
+  // Process Daily Sales in JS
+  const dailyMap = new Map<string, any>()
+  orders.forEach(order => {
+    const date = order.createdAt.toISOString().split('T')[0]
+    const current = dailyMap.get(date) || { date, orders_count: 0, total_revenue: 0 }
+    current.orders_count += 1
+    current.total_revenue += order.total
+    dailyMap.set(date, current)
+  })
 
-    // Top selling products
-    prisma.$queryRaw`
-      SELECT p.name as product_name,
-             p.sku,
-             SUM(oi.quantity) as total_sold,
-             SUM(oi.price * oi.quantity) as total_revenue
-      FROM order_items oi
-      JOIN products p ON oi.product_id = p.id
-      JOIN orders o ON oi.order_id = o.id
-      WHERE o.created_at >= ${startDate} 
-        AND o.created_at <= ${endDate}
-        AND o.status != 'CANCELLED'
-        ${companyId ? `AND o.company_id = '${companyId}'` : ''}
-        ${session.user.role === 'ACCOUNT_ADMIN' ? `AND o.company_id = '${session.user.companyId}'` : ''}
-      GROUP BY p.id, p.name, p.sku
-      ORDER BY total_revenue DESC
-      LIMIT 10
-    `
-  ])
+  const ordersByDay = Array.from(dailyMap.values())
+    .map(d => ({
+      ...d,
+      avg_order_value: d.total_revenue / d.orders_count
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+
+  // Process Sales by Company in JS
+  const companyMap = new Map<string, any>()
+  orders.forEach(order => {
+    const cName = order.company?.name || 'Global'
+    const cId = order.companyId || 'global'
+    const current = companyMap.get(cId) || { company_name: cName, orders_count: 0, total_revenue: 0 }
+    current.orders_count += 1
+    current.total_revenue += order.total
+    companyMap.set(cId, current)
+  })
+
+  const ordersByCompany = session.user.role === 'SUPER_ADMIN'
+    ? Array.from(companyMap.values())
+      .map(c => ({
+        ...c,
+        avg_order_value: c.total_revenue / c.orders_count
+      }))
+      .sort((a, b) => b.total_revenue - a.total_revenue)
+    : []
+
+  // Process Top Products in JS
+  const productMap = new Map<string, any>()
+  orders.forEach(order => {
+    order.orderItems.forEach(item => {
+      const pId = item.productId
+      const current = productMap.get(pId) || {
+        product_name: item.product.name,
+        sku: item.product.sku,
+        total_sold: 0,
+        total_revenue: 0
+      }
+      current.total_sold += item.quantity
+      current.total_revenue += item.price * item.quantity
+      productMap.set(pId, current)
+    })
+  })
+
+  const topProducts = Array.from(productMap.values())
+    .sort((a, b) => b.total_revenue - a.total_revenue)
+    .slice(0, 10)
 
   const summary = {
     totalOrders: orders.length,
@@ -247,8 +250,8 @@ async function generateInventoryReport(session: Record<string, any>) {
       inventoryValue: product.price * product.stock,
       status: product.status,
       totalSold: product._count.orderItems,
-      stockStatus: product.stock === 0 ? 'Out of Stock' : 
-                  product.stock <= product.minStock ? 'Low Stock' : 'Good'
+      stockStatus: product.stock === 0 ? 'Out of Stock' :
+        product.stock <= product.minStock ? 'Low Stock' : 'Good'
     })),
     headers: ['Name', 'SKU', 'Category', 'Current Stock', 'Min Stock', 'Price', 'Inventory Value', 'Status', 'Total Sold', 'Stock Status'],
     data: products.map(product => [
@@ -261,8 +264,8 @@ async function generateInventoryReport(session: Record<string, any>) {
       product.price * product.stock,
       product.status,
       product._count.orderItems,
-      product.stock === 0 ? 'Out of Stock' : 
-      product.stock <= product.minStock ? 'Low Stock' : 'Good'
+      product.stock === 0 ? 'Out of Stock' :
+        product.stock <= product.minStock ? 'Low Stock' : 'Good'
     ])
   }
 }
@@ -270,7 +273,7 @@ async function generateInventoryReport(session: Record<string, any>) {
 // Customer Report
 async function generateCustomerReport(startDate: Date, endDate: Date, session: Record<string, any>, companyId?: string | null) {
   const where: Record<string, unknown> = {}
-  
+
   if (companyId) {
     where.companyId = companyId
   } else if (session.user.role === 'ACCOUNT_ADMIN') {
@@ -302,7 +305,7 @@ async function generateCustomerReport(startDate: Date, endDate: Date, session: R
     summary: {
       totalCustomers: users.length,
       activeCustomers: users.filter(user => user._count.orders > 0).length,
-      newCustomers: users.filter(user => 
+      newCustomers: users.filter(user =>
         new Date(user.createdAt) >= startDate && new Date(user.createdAt) <= endDate
       ).length
     },
@@ -361,7 +364,7 @@ async function generateProductReport(startDate: Date, endDate: Date, session: Re
     products: products.map(product => {
       const totalSold = product.orderItems.reduce((sum, item) => sum + item.quantity, 0)
       const revenue = product.orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-      
+
       return {
         name: product.name,
         sku: product.sku,
@@ -370,7 +373,7 @@ async function generateProductReport(startDate: Date, endDate: Date, session: Re
         stock: product.stock,
         totalSold,
         revenue,
-        lastSold: product.orderItems.length > 0 
+        lastSold: product.orderItems.length > 0
           ? Math.max(...product.orderItems.map(item => new Date(item.order.createdAt).getTime()))
           : null
       }
@@ -379,10 +382,10 @@ async function generateProductReport(startDate: Date, endDate: Date, session: Re
     data: products.map(product => {
       const totalSold = product.orderItems.reduce((sum, item) => sum + item.quantity, 0)
       const revenue = product.orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-      const lastSold = product.orderItems.length > 0 
+      const lastSold = product.orderItems.length > 0
         ? new Date(Math.max(...product.orderItems.map(item => new Date(item.order.createdAt).getTime()))).toISOString().split('T')[0]
         : 'Never'
-      
+
       return [
         product.name,
         product.sku,
@@ -517,10 +520,10 @@ async function generateAuditReport(startDate: Date, endDate: Date, session: Reco
 // Helper function to convert data to CSV
 function convertToCSV(data: unknown[], headers: string[]): string {
   const csvRows = []
-  
+
   // Add headers
   csvRows.push(headers.join(','))
-  
+
   // Add data rows
   for (const row of data) {
     const values = (row as any[]).map((field: any) => {
@@ -532,6 +535,6 @@ function convertToCSV(data: unknown[], headers: string[]): string {
     })
     csvRows.push(values.join(','))
   }
-  
+
   return csvRows.join('\n')
 }

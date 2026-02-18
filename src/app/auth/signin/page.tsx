@@ -15,10 +15,19 @@ export default function SignInPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [showCaptcha, setShowCaptcha] = useState(false)
+  const [captchaVerified, setCaptchaVerified] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (failedAttempts >= 3 && !captchaVerified) {
+      toast.error('Please verify the CAPTCHA first.')
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -29,11 +38,19 @@ export default function SignInPage() {
       })
 
       if (result?.error) {
-        toast.error('Invalid credentials. Please try again.')
+        const newFailCount = failedAttempts + 1
+        setFailedAttempts(newFailCount)
+
+        if (newFailCount >= 3) {
+          setShowCaptcha(true)
+          toast.error('Too many failed attempts. Please solve the CAPTCHA.')
+        } else {
+          toast.error(`Invalid credentials. ${3 - newFailCount} attempts remaining.`)
+        }
       } else {
         toast.success('Welcome back!')
         const session = await getSession()
-        
+
         // Redirect based on user role
         if (session?.user?.role === 'SUPER_ADMIN') {
           router.push('/admin/dashboard')
@@ -64,7 +81,7 @@ export default function SignInPage() {
             Enter your credentials to access your B2B account
           </p>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
@@ -86,10 +103,11 @@ export default function SignInPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
                     required
+                    disabled={isLoading || (failedAttempts >= 3 && !captchaVerified)}
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -102,15 +120,35 @@ export default function SignInPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
                     required
+                    disabled={isLoading || (failedAttempts >= 3 && !captchaVerified)}
                   />
                 </div>
               </div>
-              
-              <Button type="submit" className="w-full" disabled={isLoading}>
+
+              {showCaptcha && !captchaVerified && (
+                <div className="p-4 bg-secondary/50 rounded-lg space-y-3 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Security Verification</p>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="captcha"
+                      onChange={(e) => setCaptchaVerified(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="captcha" className="text-sm cursor-pointer">I am not a robot</Label>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || (failedAttempts >= 3 && !captchaVerified)}
+              >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
-            
+
             <div className="mt-4 text-center text-sm">
               <span className="text-muted-foreground">Don&apos;t have an account? </span>
               <Link href="/auth/signup" className="text-primary hover:underline">
@@ -119,7 +157,7 @@ export default function SignInPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <div className="px-8 text-center text-sm text-muted-foreground">
           <div className="flex items-center justify-center space-x-1">
             <AlertCircle className="h-4 w-4" />

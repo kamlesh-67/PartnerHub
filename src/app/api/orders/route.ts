@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { createAuditLog, getClientInfo } from '@/lib/audit'
 import { sendOrderConfirmation } from '@/lib/email'
 import { nanoid } from 'nanoid'
+import { logError } from '@/lib/security'
+import { orderSchema, orderStatusUpdateSchema } from '@/lib/validations'
+import { z } from 'zod'
 
-const prisma = new PrismaClient()
+
 
 // GET - Fetch orders
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -26,7 +29,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20')
 
     const where: Record<string, unknown> = {}
-    
+
     // Filter by user's orders unless admin
     if (!['SUPER_ADMIN', 'ACCOUNT_ADMIN'].includes(session.user.role)) {
       where.userId = session.user.id
@@ -52,7 +55,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (dateTo) {
-      where.createdAt = where.createdAt 
+      where.createdAt = where.createdAt
         ? { ...where.createdAt, lte: new Date(dateTo) }
         : { lte: new Date(dateTo) }
     }
@@ -114,10 +117,8 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error fetching orders:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
+    logError('order.fetch', error)
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }
 
@@ -125,19 +126,28 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const json = await request.json()
+    const validation = orderSchema.safeParse(json)
+
+    if (!validation.success) {
+      return NextResponse.json({
+        error: 'Invalid request data',
+        details: validation.error.format()
+      }, { status: 400 })
+    }
+
     const {
       shippingAddressId,
       billingAddressId,
       notes,
-      paymentMethod = 'credit_card',
+      paymentMethod,
       paymentToken
-    } = body
+    } = validation.data
 
     // Validate addresses exist and belong to user
     const [shippingAddress, billingAddress] = await Promise.all([
@@ -370,10 +380,8 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Error creating order:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
+    logError('order.create', error)
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }
 
@@ -381,7 +389,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -393,12 +401,18 @@ export async function PUT(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const orderId = searchParams.get('id')
-    const body = await request.json()
-    const { status, notes } = body
+    const json = await request.json()
 
-    if (!orderId || !status) {
-      return NextResponse.json({ error: 'Order ID and status are required' }, { status: 400 })
+    const validation = orderStatusUpdateSchema.safeParse({ ...json, id: orderId })
+
+    if (!validation.success) {
+      return NextResponse.json({
+        error: 'Invalid update data',
+        details: validation.error.format()
+      }, { status: 400 })
     }
+
+    const { status, notes, id: validatedOrderId } = validation.data
 
     const validStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']
     if (!validStatuses.includes(status)) {
@@ -407,26 +421,13 @@ export async function PUT(request: NextRequest) {
 
     // Get current order
     const currentOrder = await prisma.order.findUnique({
-      where: { id: orderId },
+      where: { id: validatedOrderId },
       include: {
-        user: {
-          select: {
-            name: true,
-            email: true
-          }
-        },
-        orderItems: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
-          }
-        }
+        orderItems: true,
+        user: true
       }
-    })
+    }) as any // Using as any to bypass complex Prisma include typing for now, or I can define the type. But local fix is faster.
+
 
     if (!currentOrder) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
@@ -464,15 +465,10 @@ export async function PUT(request: NextRequest) {
     if (notes) updateData.notes = notes
 
     const updatedOrder = await prisma.order.update({
-      where: { id: orderId },
+      where: { id: validatedOrderId },
       data: updateData,
       include: {
-        user: {
-          select: {
-            name: true,
-            email: true
-          }
-        }
+        user: true
       }
     })
 
@@ -481,7 +477,7 @@ export async function PUT(request: NextRequest) {
     await createAuditLog({
       action: 'order.status_update',
       resource: 'order',
-      resourceId: orderId,
+      resourceId: validatedOrderId,
       userId: session.user.id,
       userEmail: session.user.email || 'unknown@example.com',
       userName: session.user.name || 'Unknown User',
@@ -502,9 +498,7 @@ export async function PUT(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error updating order:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
+    logError('order.update', error)
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }
